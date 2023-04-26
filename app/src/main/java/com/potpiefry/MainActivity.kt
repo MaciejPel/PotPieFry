@@ -8,14 +8,15 @@ import androidx.compose.runtime.getValue
 import androidx.lifecycle.viewmodel.compose.viewModel
 import com.potpiefry.ui.theme.PotPieFryTheme
 import com.potpiefry.ui.view.MainScreen
-import com.potpiefry.ui.viewmodel.PreferencesViewModel
+import com.potpiefry.ui.viewmodel.SettingsViewModel
 
 class MainActivity : ComponentActivity() {
 	override fun onCreate(savedInstanceState: Bundle?) {
 		super.onCreate(savedInstanceState)
 		setContent {
-			val preferencesViewModel: PreferencesViewModel = viewModel()
+			val preferencesViewModel: SettingsViewModel = viewModel()
 			val preferencesUiState by preferencesViewModel.uiState.collectAsState()
+
 			PotPieFryTheme(darkTheme = preferencesUiState.theme) {
 				MainScreen()
 			}

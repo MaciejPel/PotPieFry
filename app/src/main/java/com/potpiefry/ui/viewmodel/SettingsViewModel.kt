@@ -6,20 +6,20 @@ import kotlinx.coroutines.flow.StateFlow
 import kotlinx.coroutines.flow.asStateFlow
 import kotlinx.coroutines.flow.update
 
-data class PreferencesUiState(
+data class SettingsUiState(
 	val theme: Boolean? = null,
 )
 
-class PreferencesViewModel : ViewModel() {
-	private val _uiState = MutableStateFlow(PreferencesUiState())
-	val uiState: StateFlow<PreferencesUiState> = _uiState.asStateFlow()
+class SettingsViewModel : ViewModel() {
+	private val _uiState = MutableStateFlow(SettingsUiState())
+	val uiState: StateFlow<SettingsUiState> = _uiState.asStateFlow()
 
 	init {
-		resetPreferences()
+		resetSettings()
 	}
 
-	private fun resetPreferences() {
-		_uiState.value = PreferencesUiState(null)
+	private fun resetSettings() {
+		_uiState.value = SettingsUiState(null)
 	}
 
 	fun updateTheme(theme: Boolean? = null) {

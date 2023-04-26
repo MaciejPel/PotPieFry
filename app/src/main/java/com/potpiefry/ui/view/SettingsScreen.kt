@@ -2,18 +2,14 @@ package com.potpiefry.ui.view
 
 import androidx.compose.foundation.layout.Arrangement
 import androidx.compose.foundation.layout.Column
-import androidx.compose.foundation.layout.PaddingValues
 import androidx.compose.foundation.layout.Row
 import androidx.compose.foundation.layout.fillMaxSize
 import androidx.compose.foundation.layout.fillMaxWidth
 import androidx.compose.foundation.layout.padding
-import androidx.compose.foundation.lazy.LazyColumn
-import androidx.compose.foundation.lazy.items
 import androidx.compose.foundation.selection.selectable
 import androidx.compose.foundation.selection.selectableGroup
 import androidx.compose.material3.MaterialTheme
 import androidx.compose.material3.RadioButton
-import androidx.compose.material3.Surface
 import androidx.compose.material3.Text
 import androidx.compose.runtime.Composable
 import androidx.compose.runtime.collectAsState
@@ -23,14 +19,13 @@ import androidx.compose.ui.Modifier
 import androidx.compose.ui.semantics.Role
 import androidx.compose.ui.unit.dp
 import androidx.lifecycle.viewmodel.compose.viewModel
-import com.potpiefry.ui.viewmodel.PreferencesViewModel
+import com.potpiefry.ui.viewmodel.SettingsViewModel
 
 @Composable
 fun SettingsScreen(
-	preferencesViewModel: PreferencesViewModel = viewModel(),
-	modifier: Modifier = Modifier
+	settingsViewModel: SettingsViewModel = viewModel()
 ) {
-	val preferencesUiState by preferencesViewModel.uiState.collectAsState()
+	val settingsUiState by settingsViewModel.uiState.collectAsState()
 	val themeOptions =
 		listOf(Pair("Light", false), Pair("Dark", true), Pair("Automatic (system)", null))
 
@@ -59,8 +54,8 @@ fun SettingsScreen(
 				modifier = Modifier
 					.fillMaxWidth()
 					.selectable(
-						selected = preferencesUiState.theme == option.second,
-						onClick = { preferencesViewModel.updateTheme(option.second) },
+						selected = settingsUiState.theme == option.second,
+						onClick = { settingsViewModel.updateTheme(option.second) },
 						role = Role.RadioButton
 					)
 					.padding(16.dp),
@@ -68,7 +63,7 @@ fun SettingsScreen(
 			) {
 				Text(text = option.first)
 				RadioButton(
-					selected = preferencesUiState.theme == option.second,
+					selected = settingsUiState.theme == option.second,
 					onClick = null
 				)
 			}
