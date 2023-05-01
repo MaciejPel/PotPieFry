@@ -15,10 +15,13 @@ import androidx.compose.foundation.lazy.grid.LazyVerticalGrid
 import androidx.compose.foundation.lazy.grid.items
 import androidx.compose.material3.Card
 import androidx.compose.material3.MaterialTheme
+import androidx.compose.material3.Tab
+import androidx.compose.material3.TabRow
 import androidx.compose.material3.Text
 import androidx.compose.runtime.Composable
 import androidx.compose.runtime.collectAsState
 import androidx.compose.runtime.getValue
+import androidx.compose.runtime.setValue
 import androidx.compose.ui.Alignment
 import androidx.compose.ui.Modifier
 import androidx.compose.ui.layout.ContentScale
@@ -32,27 +35,47 @@ import androidx.navigation.NavController
 import coil.compose.AsyncImage
 import coil.request.ImageRequest
 import com.potpiefry.R
+import com.potpiefry.data.TabType
 import com.potpiefry.ui.viewmodel.HomeViewModel
+import com.potpiefry.ui.viewmodel.NavigationViewModel
+import com.potpiefry.ui.viewmodel.tabs
 
 @Composable
 fun HomeScreen(
-	homeViewModel: HomeViewModel = viewModel(),
 	navController: NavController,
+	navigationViewModel: NavigationViewModel,
+	homeViewModel: HomeViewModel = viewModel(),
 ) {
+	navigationViewModel.setNavigation(NavigationScreen.Home.title)
 	val homeUiState by homeViewModel.uiState.collectAsState()
 
 	Column() {
+		TabRow(selectedTabIndex = homeUiState.tab) {
+			tabs.forEachIndexed { index, tab ->
+				Tab(
+					selected = homeUiState.tab == index,
+					onClick = { homeViewModel.setTab(index) },
+					text = { Text(text = tab.type, maxLines = 1, overflow = TextOverflow.Ellipsis) }
+				)
+			}
+		}
 		LazyVerticalGrid(
 			columns = GridCells.Fixed(1),
 			verticalArrangement = Arrangement.spacedBy(12.dp),
 			horizontalArrangement = Arrangement.spacedBy(12.dp),
-			contentPadding = PaddingValues(16.dp)
+			contentPadding = PaddingValues(12.dp)
 		) {
-			items(homeUiState.dishes) { dish ->
+			items(homeUiState.dishes
+				.filter {
+					if (tabs[homeUiState.tab] == TabType.Start) true
+					else it.type == tabs[homeUiState.tab]
+				}
+				.filter { it.name.lowercase().contains(homeUiState.query.lowercase()) }
+			) { dish ->
 				Card(
 					modifier = Modifier
 						.clickable {
-							navController.navigate(route = BottomBarScreen.Details.passId(dish.id))
+							navController.navigate(route = NavigationScreen.Details.passId(dish.id))
 						},
 				) {
 					Row(

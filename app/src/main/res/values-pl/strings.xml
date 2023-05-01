@@ -1,0 +1,10 @@
+<?xml version="1.0" encoding="utf-8"?>
+<resources>
+    <string name="navigation_home">start</string>
+    <string name="navigation_settings">ustawienia</string>
+    <string name="theme">motyw</string>
+    <string name="theme_light">jasny</string>
+    <string name="theme_dark">ciemny</string>
+    <string name="theme_system">systemowy</string>
+    <string name="navigation_details">szczegóły</string>
+</resources>

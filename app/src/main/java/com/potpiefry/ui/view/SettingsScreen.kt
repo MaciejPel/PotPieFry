@@ -19,12 +19,15 @@ import androidx.compose.ui.Modifier
 import androidx.compose.ui.semantics.Role
 import androidx.compose.ui.unit.dp
 import androidx.lifecycle.viewmodel.compose.viewModel
+import com.potpiefry.ui.viewmodel.NavigationViewModel
 import com.potpiefry.ui.viewmodel.SettingsViewModel
 
 @Composable
 fun SettingsScreen(
+	navigationViewModel: NavigationViewModel,
 	settingsViewModel: SettingsViewModel = viewModel()
 ) {
+	navigationViewModel.setNavigation(NavigationScreen.Settings.title)
 	val settingsUiState by settingsViewModel.uiState.collectAsState()
 	val themeOptions =
 		listOf(Pair("Light", false), Pair("Dark", true), Pair("Automatic (system)", null))

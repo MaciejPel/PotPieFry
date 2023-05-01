@@ -1,3 +1,10 @@
 <resources>
-    <string name="app_name">PotPieFry</string>
+    <string name="app_name" translatable="false">PotPieFry</string>
+    <string name="navigation_home">home</string>
+    <string name="navigation_settings">settings</string>
+    <string name="theme">theme</string>
+    <string name="theme_light">light</string>
+    <string name="theme_dark">dark</string>
+    <string name="theme_system">system</string>
+    <string name="navigation_details">details</string>
 </resources>

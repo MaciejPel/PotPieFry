@@ -1,103 +1,136 @@
 package com.potpiefry.ui.view
 
-import android.util.Log
+import android.content.Intent
 import androidx.compose.animation.ExperimentalAnimationApi
-import androidx.compose.foundation.layout.RowScope
+import androidx.compose.foundation.layout.fillMaxWidth
+import androidx.compose.foundation.layout.imePadding
+import androidx.compose.foundation.layout.padding
 import androidx.compose.material.icons.Icons
+import androidx.compose.material.icons.filled.ArrowBack
+import androidx.compose.material.icons.filled.Close
 import androidx.compose.material.icons.filled.Menu
+import androidx.compose.material.icons.filled.Search
+import androidx.compose.material.icons.filled.Share
+import androidx.compose.material3.BottomAppBar
+import androidx.compose.material3.BottomAppBarDefaults
+import androidx.compose.material3.CenterAlignedTopAppBar
+import androidx.compose.material3.DrawerValue
 import androidx.compose.material3.ExperimentalMaterial3Api
+import androidx.compose.material3.FloatingActionButton
+import androidx.compose.material3.FloatingActionButtonDefaults
 import androidx.compose.material3.Icon
 import androidx.compose.material3.IconButton
-import androidx.compose.material3.NavigationBar
-import androidx.compose.material3.NavigationBarItem
+import androidx.compose.material3.MaterialTheme
+import androidx.compose.material3.OutlinedTextField
 import androidx.compose.material3.Scaffold
 import androidx.compose.material3.Text
-import androidx.compose.material3.TopAppBar
 import androidx.compose.material3.TopAppBarDefaults
+import androidx.compose.material3.rememberDrawerState
 import androidx.compose.runtime.Composable
+import androidx.compose.runtime.collectAsState
 import androidx.compose.runtime.getValue
+import androidx.compose.runtime.rememberCoroutineScope
 import androidx.compose.ui.Modifier
 import androidx.compose.ui.input.nestedscroll.nestedScroll
+import androidx.compose.ui.platform.LocalContext
+import androidx.compose.ui.unit.dp
 import androidx.lifecycle.viewmodel.compose.viewModel
-import androidx.navigation.NavDestination
-import androidx.navigation.NavDestination.Companion.hierarchy
-import androidx.navigation.NavGraph.Companion.findStartDestination
-import androidx.navigation.NavHostController
-import androidx.navigation.compose.currentBackStackEntryAsState
 import com.google.accompanist.navigation.animation.rememberAnimatedNavController
+import com.potpiefry.ui.components.NavDrawer
+import com.potpiefry.ui.viewmodel.HomeViewModel
+import com.potpiefry.ui.viewmodel.NavigationViewModel
 import com.potpiefry.ui.viewmodel.SettingsViewModel
+import kotlinx.coroutines.launch
 
 @OptIn(ExperimentalMaterial3Api::class, ExperimentalAnimationApi::class)
 @Composable
-fun MainScreen(preferencesViewModel: SettingsViewModel = viewModel()) {
+fun MainScreen(settingsViewModel: SettingsViewModel = viewModel()) {
 	val navController = rememberAnimatedNavController()
+	val navigationViewModel: NavigationViewModel = viewModel()
+	val navigationUiState by navigationViewModel.uiState.collectAsState()
+
+	val homeViewModel: HomeViewModel = viewModel()
+	val homeUiState by homeViewModel.uiState.collectAsState()
+
+	val drawerState = rememberDrawerState(DrawerValue.Closed)
+	val drawerScope = rememberCoroutineScope()
+
 	val scrollBehavior = TopAppBarDefaults.pinnedScrollBehavior()
 
-	Scaffold(
-		modifier = Modifier.nestedScroll(scrollBehavior.nestedScrollConnection),
-		topBar = {
-			TopAppBar(
-				scrollBehavior = scrollBehavior,
-				title = { Text(text = "Title") },
-				navigationIcon = {
-					IconButton(onClick = { /*TODO*/ }) {
-						Icon(imageVector = Icons.Default.Menu, contentDescription = "Menu")
+	NavDrawer(navController, drawerState, drawerScope) {
+		Scaffold(
+			modifier = Modifier.nestedScroll(scrollBehavior.nestedScrollConnection),
+			topBar = {
+				CenterAlignedTopAppBar(
+					scrollBehavior = scrollBehavior,
+					title = { Text(text = navigationUiState.name) },
+					navigationIcon = {
+						IconButton(onClick = {
+							drawerScope.launch { drawerState.open() }
+						}) {
+							Icon(Icons.Default.Menu, "Menu")
+						}
+					},
+				)
+			},
+			bottomBar = {
+				BottomAppBar(
+					modifier = Modifier.imePadding(),
+					actions = {
+						when (navigationUiState.name) {
+							NavigationScreen.Home.title -> {
+								OutlinedTextField(
+									modifier = Modifier
+										.padding(horizontal = 12.dp)
+										.fillMaxWidth(),
+									shape = MaterialTheme.shapes.extraLarge,
+									value = homeUiState.query,
+									onValueChange = { homeViewModel.setQuery(it) },
+									singleLine = true,
+									maxLines = 1,
+									leadingIcon = {
+										Icon(Icons.Filled.Search, "Search")
+									},
+									trailingIcon = {
+										if (homeUiState.query.isNotEmpty()) {
+											IconButton(onClick = { homeViewModel.setQuery("") }) {
+												Icon(Icons.Filled.Close, "Empty")
+											}
+										}
+									}
+								)
+							}
+
+							else -> {
+								IconButton(onClick = { navController.popBackStack() }) {
+									Icon(Icons.Filled.ArrowBack, "Back")
+								}
+							}
+						}
+					},
+					floatingActionButton = {
+						when (navigationUiState.name) {
+							NavigationScreen.Home.title -> null
+							NavigationScreen.Settings.title -> null
+							else -> {
+								shareButton(navigationUiState.currentDish)
+							}
+						}
 					}
-				},
-			)
-		},
-		bottomBar = { BottomBar(navController = navController) }
-	) { innerPadding ->
-		NavGraph(navController = navController, innerPadding, preferencesViewModel)
-	}
-}
-
-@Composable
-fun BottomBar(navController: NavHostController) {
-	val screens = listOf(
-		BottomBarScreen.Home,
-		BottomBarScreen.Settings
-	)
-	val navBackStackEntry by navController.currentBackStackEntryAsState()
-	val currentDestination = navBackStackEntry?.destination
-
-	NavigationBar() {
-		screens.forEach { screen ->
-			AddItem(
-				screen = screen,
-				currentDestination = currentDestination,
-				navController = navController
+				)
+			}
+		) { innerPadding ->
+			NavGraph(
+				navController = navController,
+				navigationViewModel = navigationViewModel,
+				innerPadding = innerPadding,
+				homeViewModel = homeViewModel,
+				settingsViewModel = settingsViewModel
 			)
 		}
 	}
 }
 
-
-@Composable
-fun RowScope.AddItem(
-	screen: BottomBarScreen,
-	currentDestination: NavDestination?,
-	navController: NavHostController
-) {
-	NavigationBarItem(
-		icon = {
-			Icon(
-				imageVector = screen.icon,
-				contentDescription = "Navigation Icon"
-			)
-		},
-		selected = currentDestination?.hierarchy?.any {
-			Log.d("S", "SELECTED")
-			it.route == screen.route
-		} == true,
-		onClick = {
-			Log.d("C", "CLICKED")
-			navController.navigate(screen.route) {
-				popUpTo(navController.graph.findStartDestination().id)
-				launchSingleTop = true
-			}
-		})
-}
 
 
 
