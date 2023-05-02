@@ -1,6 +1,6 @@
 package com.potpiefry.data
 
-enum class TabType(val type: String) {
+enum class TabType(val title: String) {
 	Start("Widok główny"),
 	Local("Kuchnia polska"),
 	Abroad("Kuchnia świata")

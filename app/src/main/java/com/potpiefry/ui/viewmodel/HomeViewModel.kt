@@ -12,7 +12,6 @@ import kotlinx.coroutines.flow.update
 data class HomeUiState(
 	val dishes: List<Dish> = emptyList(),
 	val query: String = "",
-	val tab: Int = 0
 )
 
 val tabs = listOf(TabType.Start, TabType.Local, TabType.Abroad)
@@ -31,9 +30,5 @@ class HomeViewModel : ViewModel() {
 
 	fun setQuery(query: String) {
 		_uiState.update { currentState -> currentState.copy(query = query) }
-	}
-
-	fun setTab(tab: Int) {
-		_uiState.update { currentState -> currentState.copy(tab = tab) }
 	}
 }

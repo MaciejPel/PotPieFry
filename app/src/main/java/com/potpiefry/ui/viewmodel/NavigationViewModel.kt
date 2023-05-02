@@ -8,7 +8,8 @@ import kotlinx.coroutines.flow.asStateFlow
 import kotlinx.coroutines.flow.update
 
 data class NavigationUiState(
-	val name: String = "",
+	val title: String = "",
+	val route: String = "",
 	val currentDish: Int? = null
 )
 
@@ -23,14 +24,15 @@ class NavigationViewModel : ViewModel() {
 	private fun resetNavigation() {
 		_uiState.update { currentState ->
 			currentState.copy(
-				name = NavigationScreen.Home.title,
+				title = NavigationScreen.Home.title,
+				route = NavigationScreen.Home.route,
 				currentDish = null
 			)
 		}
 	}
 
-	fun setNavigation(name: String) {
-		_uiState.update { currentState -> currentState.copy(name = name) }
+	fun setNavigation(title: String, route: String) {
+		_uiState.update { currentState -> currentState.copy(title = title, route = route) }
 	}
 
 	fun setDish(dishId: Int) {
