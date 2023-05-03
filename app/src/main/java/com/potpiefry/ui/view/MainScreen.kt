@@ -15,12 +15,10 @@ import androidx.compose.material3.DrawerValue
 import androidx.compose.material3.ExperimentalMaterial3Api
 import androidx.compose.material3.Icon
 import androidx.compose.material3.IconButton
-import androidx.compose.material3.LargeTopAppBar
 import androidx.compose.material3.MaterialTheme
 import androidx.compose.material3.OutlinedTextField
 import androidx.compose.material3.Scaffold
 import androidx.compose.material3.Text
-import androidx.compose.material3.TopAppBar
 import androidx.compose.material3.TopAppBarDefaults
 import androidx.compose.material3.rememberDrawerState
 import androidx.compose.runtime.Composable
@@ -53,28 +51,30 @@ fun MainScreen(settingsViewModel: SettingsViewModel = viewModel()) {
 
 	val scrollBehavior = TopAppBarDefaults.pinnedScrollBehavior()
 
-	NavDrawer(navController, drawerState, drawerScope) {
+	NavDrawer(navController, navigationViewModel, drawerState, drawerScope) {
 		Scaffold(
 			modifier = Modifier.nestedScroll(scrollBehavior.nestedScrollConnection),
 			topBar = {
-				CenterAlignedTopAppBar(
-					scrollBehavior = scrollBehavior,
-					title = { Text(text = navigationUiState.title) },
-					navigationIcon = {
-						IconButton(onClick = {
-							drawerScope.launch { drawerState.open() }
-						}) {
-							Icon(Icons.Default.Menu, "Menu")
-						}
-					},
-				)
+				if (!navigationUiState.route.contains("detail")) {
+					CenterAlignedTopAppBar(
+						scrollBehavior = scrollBehavior,
+						title = { Text(text = navigationUiState.title) },
+						navigationIcon = {
+							IconButton(onClick = {
+								drawerScope.launch { drawerState.open() }
+							}) {
+								Icon(Icons.Default.Menu, "Menu")
+							}
+						},
+					)
+				}
 			},
 			bottomBar = {
 				BottomAppBar(
 					modifier = Modifier.imePadding(),
 					actions = {
-						when (navigationUiState.title) {
-							NavigationScreen.Home.title -> {
+						when (navigationUiState.route) {
+							NavigationScreen.Home.route -> {
 								OutlinedTextField(
 									modifier = Modifier
 										.padding(horizontal = 12.dp)
@@ -98,7 +98,9 @@ fun MainScreen(settingsViewModel: SettingsViewModel = viewModel()) {
 							}
 
 							else -> {
-								IconButton(onClick = { navController.popBackStack() }) {
+								IconButton(onClick = {
+									navController.popBackStack()
+								}) {
 									Icon(Icons.Filled.ArrowBack, "Back")
 								}
 							}
@@ -109,7 +111,7 @@ fun MainScreen(settingsViewModel: SettingsViewModel = viewModel()) {
 							NavigationScreen.Home.title -> null
 							NavigationScreen.Settings.title -> null
 							else -> {
-								shareButton(navigationUiState.currentDish)
+								ShareButton(navigationUiState.currentDish)
 							}
 						}
 					}
@@ -126,19 +128,6 @@ fun MainScreen(settingsViewModel: SettingsViewModel = viewModel()) {
 		}
 	}
 }
-
-
-
-
-
-
-
-
-
-
-
-
-
 
 
 

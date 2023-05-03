@@ -15,8 +15,8 @@ import androidx.compose.material3.ModalNavigationDrawer
 import androidx.compose.material3.NavigationDrawerItem
 import androidx.compose.material3.Text
 import androidx.compose.runtime.Composable
-import androidx.compose.runtime.mutableStateOf
-import androidx.compose.runtime.remember
+import androidx.compose.runtime.collectAsState
+import androidx.compose.runtime.getValue
 import androidx.compose.ui.Modifier
 import androidx.compose.ui.text.font.FontWeight
 import androidx.compose.ui.unit.dp
@@ -24,6 +24,7 @@ import androidx.navigation.NavController
 import androidx.navigation.NavGraph.Companion.findStartDestination
 import com.potpiefry.ui.theme.shapeScheme
 import com.potpiefry.ui.view.NavigationScreen
+import com.potpiefry.ui.viewmodel.NavigationViewModel
 import kotlinx.coroutines.CoroutineScope
 import kotlinx.coroutines.launch
 
@@ -31,15 +32,17 @@ import kotlinx.coroutines.launch
 @Composable
 fun NavDrawer(
 	navController: NavController,
+	navigationViewModel: NavigationViewModel,
 	drawerState: DrawerState,
 	scope: CoroutineScope,
 	content: @Composable () -> Unit
 ) {
+	val navigationUiState by navigationViewModel.uiState.collectAsState()
 	val screens = listOf(
 		NavigationScreen.Home,
 		NavigationScreen.Settings
 	)
-	val selectedItem = remember { mutableStateOf(screens[0]) }
+
 	ModalNavigationDrawer(
 		gesturesEnabled = true,
 		drawerState = drawerState,
@@ -65,14 +68,16 @@ fun NavDrawer(
 						NavigationDrawerItem(
 							icon = { Icon(screen.icon, contentDescription = null) },
 							label = { Text(screen.title) },
-							selected = screen == selectedItem.value,
+							selected = screen.route == navigationUiState.route,
 							onClick = {
 								scope.launch { drawerState.close() }
 								navController.navigate(screen.route) {
-									popUpTo(navController.graph.findStartDestination().id)
+									popUpTo(navController.graph.findStartDestination().id) {
+										saveState = true
+									}
 									launchSingleTop = true
+									restoreState = true
 								}
-								selectedItem.value = screen
 							},
 							modifier = Modifier.padding(start = 0.dp, end = 12.dp),
 							shape = MaterialTheme.shapeScheme.leftZeroRightFull

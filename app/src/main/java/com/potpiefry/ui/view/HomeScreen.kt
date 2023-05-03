@@ -35,6 +35,7 @@ import androidx.compose.ui.unit.dp
 import androidx.compose.ui.unit.sp
 import androidx.lifecycle.viewmodel.compose.viewModel
 import androidx.navigation.NavController
+import androidx.navigation.NavGraph.Companion.findStartDestination
 import coil.compose.AsyncImage
 import coil.request.ImageRequest
 import com.potpiefry.R
@@ -52,7 +53,8 @@ fun HomeScreen(
 	navigationViewModel: NavigationViewModel,
 	homeViewModel: HomeViewModel = viewModel(),
 ) {
-	navigationViewModel.setNavigation(NavigationScreen.Home.title, NavigationScreen.Home.route)
+	val navigationUiState by navigationViewModel.uiState.collectAsState()
+
 	val homeUiState by homeViewModel.uiState.collectAsState()
 	val dishes =
 		homeUiState.dishes.filter { it.name.lowercase().contains(homeUiState.query.lowercase()) }
@@ -61,15 +63,17 @@ fun HomeScreen(
 	val tabScope = rememberCoroutineScope()
 
 	Column(modifier = Modifier.fillMaxSize()) {
-		TabRow(selectedTabIndex = pagerState.currentPage) {
-			tabs.forEachIndexed { index, item ->
-				Tab(
-					selected = index == pagerState.currentPage,
-					text = { Text(text = item.title) },
-					onClick = {
-						tabScope.launch { pagerState.animateScrollToPage(index) }
-					},
-				)
+		if (!navigationUiState.route.contains("detail")) {
+			TabRow(selectedTabIndex = pagerState.currentPage) {
+				tabs.forEachIndexed { index, item ->
+					Tab(
+						selected = index == pagerState.currentPage,
+						text = { Text(text = item.title) },
+						onClick = {
+							tabScope.launch { pagerState.animateScrollToPage(index) }
+						},
+					)
+				}
 			}
 		}
 		HorizontalPager(pageCount = tabs.size, state = pagerState) { pageIndex ->
@@ -96,7 +100,10 @@ fun HomeScreen(
 }
 
 @Composable
-fun DishGrid(navController: NavController, dishes: List<Dish>) {
+fun DishGrid(
+	navController: NavController,
+	dishes: List<Dish>
+) {
 	LazyVerticalGrid(
 		modifier = Modifier.fillMaxSize(),
 		columns = GridCells.Fixed(1),
@@ -110,7 +117,13 @@ fun DishGrid(navController: NavController, dishes: List<Dish>) {
 			Card(
 				modifier = Modifier
 					.clickable {
-						navController.navigate(route = NavigationScreen.Details.passId(dish.id))
+						navController.navigate(NavigationScreen.Details.passId(dish.id)) {
+							popUpTo(navController.graph.findStartDestination().id) {
+								saveState = true
+							}
+							launchSingleTop = true
+							restoreState = true
+						}
 					},
 			) {
 				Row(

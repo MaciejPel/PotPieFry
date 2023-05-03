@@ -15,6 +15,7 @@ import androidx.navigation.NavType
 import androidx.navigation.navArgument
 import com.google.accompanist.navigation.animation.AnimatedNavHost
 import com.google.accompanist.navigation.animation.composable
+import com.potpiefry.data.dishes
 import com.potpiefry.ui.viewmodel.HomeViewModel
 import com.potpiefry.ui.viewmodel.NavigationViewModel
 import com.potpiefry.ui.viewmodel.SettingsViewModel
@@ -36,18 +37,25 @@ fun NavGraph(
 		composable(
 			route = NavigationScreen.Home.route,
 			enterTransition = {
-				slideIntoContainer(
-					AnimatedContentTransitionScope.SlideDirection.Right,
-					animationSpec = tween(400)
-				)
+				when (initialState.destination.route) {
+					NavigationScreen.Home.route -> EnterTransition.None
+					else -> slideIntoContainer(
+						AnimatedContentTransitionScope.SlideDirection.Right,
+						animationSpec = tween(400)
+					)
+				}
 			},
 			exitTransition = {
-				slideOutOfContainer(
-					AnimatedContentTransitionScope.SlideDirection.Left,
-					animationSpec = tween(400)
-				)
+				when (initialState.destination.route) {
+					NavigationScreen.Home.route -> ExitTransition.None
+					else -> slideOutOfContainer(
+						AnimatedContentTransitionScope.SlideDirection.Left,
+						animationSpec = tween(400)
+					)
+				}
 			},
 		) {
+			navigationViewModel.setNavigation(NavigationScreen.Home.title, NavigationScreen.Home.route)
 			HomeScreen(navController, navigationViewModel, homeViewModel)
 		}
 		composable(
@@ -67,13 +75,14 @@ fun NavGraph(
 			},
 		) {
 			val dishId = it.arguments?.getInt(DETAIL_ARGUMENT_KEY).toString().toInt()
-			DetailsScreen(navController, navigationViewModel, dishId)
+			navigationViewModel.setNavigation(dishes[dishId].name, NavigationScreen.Details.route)
+			DetailsScreen(navigationViewModel, dishId)
 		}
 		composable(
 			route = NavigationScreen.Settings.route,
 			enterTransition = {
 				when (initialState.destination.route) {
-					"settings" -> EnterTransition.None
+					NavigationScreen.Settings.route -> EnterTransition.None
 					else -> slideIntoContainer(
 						AnimatedContentTransitionScope.SlideDirection.Left,
 						animationSpec = tween(400)
@@ -82,7 +91,7 @@ fun NavGraph(
 			},
 			exitTransition = {
 				when (initialState.destination.route) {
-					"settings" -> ExitTransition.None
+					NavigationScreen.Settings.route -> ExitTransition.None
 					else -> slideOutOfContainer(
 						AnimatedContentTransitionScope.SlideDirection.Left,
 						animationSpec = tween(400)
@@ -90,7 +99,11 @@ fun NavGraph(
 				}
 			}
 		) {
-			SettingsScreen(navigationViewModel, settingsViewModel)
+			navigationViewModel.setNavigation(
+				NavigationScreen.Settings.title,
+				NavigationScreen.Settings.route
+			)
+			SettingsScreen(settingsViewModel)
 		}
 	}
 }

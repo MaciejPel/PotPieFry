@@ -24,13 +24,8 @@ import com.potpiefry.ui.viewmodel.SettingsViewModel
 
 @Composable
 fun SettingsScreen(
-	navigationViewModel: NavigationViewModel,
 	settingsViewModel: SettingsViewModel = viewModel()
 ) {
-	navigationViewModel.setNavigation(
-		NavigationScreen.Settings.title,
-		NavigationScreen.Settings.route
-	)
 	val settingsUiState by settingsViewModel.uiState.collectAsState()
 	val themeOptions =
 		listOf(Pair("Light", false), Pair("Dark", true), Pair("Automatic (system)", null))
