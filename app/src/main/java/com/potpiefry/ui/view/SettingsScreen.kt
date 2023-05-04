@@ -21,6 +21,7 @@ import androidx.compose.ui.unit.dp
 import androidx.lifecycle.viewmodel.compose.viewModel
 import com.potpiefry.ui.viewmodel.NavigationViewModel
 import com.potpiefry.ui.viewmodel.SettingsViewModel
+import com.potpiefry.ui.viewmodel.ThemeType
 
 @Composable
 fun SettingsScreen(
@@ -28,7 +29,7 @@ fun SettingsScreen(
 ) {
 	val settingsUiState by settingsViewModel.uiState.collectAsState()
 	val themeOptions =
-		listOf(Pair("Light", false), Pair("Dark", true), Pair("Automatic (system)", null))
+		listOf(ThemeType.Light, ThemeType.Dark, ThemeType.System)
 
 	Column(
 		modifier = Modifier
@@ -55,16 +56,16 @@ fun SettingsScreen(
 				modifier = Modifier
 					.fillMaxWidth()
 					.selectable(
-						selected = settingsUiState.theme == option.second,
-						onClick = { settingsViewModel.updateTheme(option.second) },
+						selected = settingsUiState.theme == option,
+						onClick = { settingsViewModel.selectTheme(option) },
 						role = Role.RadioButton
 					)
 					.padding(16.dp),
 				horizontalArrangement = Arrangement.SpaceBetween
 			) {
-				Text(text = option.first)
+				Text(text = option.name)
 				RadioButton(
-					selected = settingsUiState.theme == option.second,
+					selected = settingsUiState.theme == option,
 					onClick = null
 				)
 			}

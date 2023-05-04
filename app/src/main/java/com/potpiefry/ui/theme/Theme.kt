@@ -112,8 +112,9 @@ fun PotPieFryTheme(
 	if (!view.isInEditMode) {
 		SideEffect {
 			val window = (view.context as Activity).window
-//			window.statusBarColor = colorScheme.surface.toArgb()
-//			WindowCompat.getInsetsController(window, view).isAppearanceLightStatusBars = !isDarkTheme
+			window.statusBarColor = colorScheme.surface.toArgb()
+			WindowCompat.getInsetsController(window, view).isAppearanceLightStatusBars = !isDarkTheme
+			WindowCompat.getInsetsController(window, view).isAppearanceLightNavigationBars = !isDarkTheme
 
 //			if (Build.VERSION.SDK_INT >= Build.VERSION_CODES.M) {
 //				val flags = view.systemUiVisibility

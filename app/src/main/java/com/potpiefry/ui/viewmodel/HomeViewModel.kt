@@ -1,34 +1,43 @@
 package com.potpiefry.ui.viewmodel
 
+import androidx.compose.runtime.getValue
+import androidx.compose.runtime.mutableStateListOf
+import androidx.compose.runtime.mutableStateOf
+import androidx.compose.runtime.setValue
 import androidx.lifecycle.ViewModel
-import com.potpiefry.data.Dish
+import androidx.lifecycle.viewModelScope
+import com.potpiefry.data.APIService
+import com.potpiefry.data.DishPreview
 import com.potpiefry.data.TabType
-import com.potpiefry.data.dishes
-import kotlinx.coroutines.flow.MutableStateFlow
-import kotlinx.coroutines.flow.StateFlow
-import kotlinx.coroutines.flow.asStateFlow
-import kotlinx.coroutines.flow.update
+import kotlinx.coroutines.launch
 
-data class HomeUiState(
-	val dishes: List<Dish> = emptyList(),
-	val query: String = "",
-)
-
-val tabs = listOf(TabType.Start, TabType.Local, TabType.Abroad)
+val homeViewTabs = listOf(TabType.Start, TabType.Local, TabType.Abroad)
 
 class HomeViewModel : ViewModel() {
-	private val _uiState = MutableStateFlow(HomeUiState())
-	val uiState: StateFlow<HomeUiState> = _uiState.asStateFlow()
+	private val _dishList = mutableStateListOf<DishPreview>()
+	var errorMessage: String by mutableStateOf("")
 
-	init {
-		resetHome()
-	}
+	private var _query: String by mutableStateOf("")
 
-	private fun resetHome() {
-		_uiState.update { currentState -> currentState.copy(dishes = dishes) }
+	val dishList: List<DishPreview>
+		get() = _dishList
+	val query: String
+		get() = _query
+
+	fun getDishList() {
+		viewModelScope.launch {
+			val apiService = APIService.getInstance()
+			try {
+				_dishList.clear()
+				_dishList.addAll(apiService.getDishes())
+
+			} catch (e: Exception) {
+				errorMessage = e.message.toString()
+			}
+		}
 	}
 
 	fun setQuery(query: String) {
-		_uiState.update { currentState -> currentState.copy(query = query) }
+		_query = query
 	}
 }

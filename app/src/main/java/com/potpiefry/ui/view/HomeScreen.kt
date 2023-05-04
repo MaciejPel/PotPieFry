@@ -22,8 +22,7 @@ import androidx.compose.material3.Tab
 import androidx.compose.material3.TabRow
 import androidx.compose.material3.Text
 import androidx.compose.runtime.Composable
-import androidx.compose.runtime.collectAsState
-import androidx.compose.runtime.getValue
+import androidx.compose.runtime.LaunchedEffect
 import androidx.compose.runtime.rememberCoroutineScope
 import androidx.compose.ui.Alignment
 import androidx.compose.ui.Modifier
@@ -39,33 +38,33 @@ import androidx.navigation.NavGraph.Companion.findStartDestination
 import coil.compose.AsyncImage
 import coil.request.ImageRequest
 import com.potpiefry.R
-import com.potpiefry.data.Dish
+import com.potpiefry.data.DishPreview
 import com.potpiefry.data.TabType
 import com.potpiefry.ui.viewmodel.HomeViewModel
-import com.potpiefry.ui.viewmodel.NavigationViewModel
-import com.potpiefry.ui.viewmodel.tabs
+import com.potpiefry.ui.viewmodel.homeViewTabs
 import kotlinx.coroutines.launch
 
 @OptIn(ExperimentalFoundationApi::class)
 @Composable
 fun HomeScreen(
 	navController: NavController,
-	navigationViewModel: NavigationViewModel,
 	homeViewModel: HomeViewModel = viewModel(),
 ) {
-	val navigationUiState by navigationViewModel.uiState.collectAsState()
-
-	val homeUiState by homeViewModel.uiState.collectAsState()
-	val dishes =
-		homeUiState.dishes.filter { it.name.lowercase().contains(homeUiState.query.lowercase()) }
-
 	val pagerState = rememberPagerState()
 	val tabScope = rememberCoroutineScope()
 
+	LaunchedEffect(Unit, block = {
+		homeViewModel.getDishList()
+	})
+
 	Column(modifier = Modifier.fillMaxSize()) {
-		if (!navigationUiState.route.contains("detail")) {
+		if (homeViewModel.errorMessage.isEmpty()) {
+			val dishes =
+				homeViewModel.dishList.filter {
+					it.name.lowercase().contains(homeViewModel.query.lowercase())
+				}
 			TabRow(selectedTabIndex = pagerState.currentPage) {
-				tabs.forEachIndexed { index, item ->
+				homeViewTabs.forEachIndexed { index, item ->
 					Tab(
 						selected = index == pagerState.currentPage,
 						text = { Text(text = item.title) },
@@ -75,34 +74,36 @@ fun HomeScreen(
 					)
 				}
 			}
-		}
-		HorizontalPager(pageCount = tabs.size, state = pagerState) { pageIndex ->
-			when (tabs[pageIndex]) {
-				TabType.Start -> {
-					DishGrid(navController, dishes)
-				}
+			HorizontalPager(pageCount = homeViewTabs.size, state = pagerState) { pageIndex ->
+				when (homeViewTabs[pageIndex]) {
+					TabType.Start -> {
+						DishGrid(navController, dishes)
+					}
 
-				TabType.Local -> {
-					DishGrid(navController, dishes.filter {
-						it.type == TabType.Local
-					})
-				}
+					TabType.Local -> {
+						DishGrid(navController, dishes.filter {
+							it.type == TabType.Local.value
+						})
+					}
 
-				TabType.Abroad -> {
-					DishGrid(navController, dishes.filter {
-						it.type == TabType.Abroad
-					})
+					TabType.Abroad -> {
+						DishGrid(navController, dishes.filter {
+							it.type == TabType.Abroad.value
+						})
+					}
 				}
 			}
+		} else {
+			Text(homeViewModel.errorMessage)
 		}
 	}
-
 }
+
 
 @Composable
 fun DishGrid(
 	navController: NavController,
-	dishes: List<Dish>
+	dishes: List<DishPreview>
 ) {
 	LazyVerticalGrid(
 		modifier = Modifier.fillMaxSize(),
@@ -111,9 +112,7 @@ fun DishGrid(
 		horizontalArrangement = Arrangement.spacedBy(12.dp),
 		contentPadding = PaddingValues(12.dp)
 	) {
-		items(
-			dishes
-		) { dish ->
+		items(dishes) { dish ->
 			Card(
 				modifier = Modifier
 					.clickable {

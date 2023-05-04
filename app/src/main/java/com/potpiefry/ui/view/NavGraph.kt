@@ -8,6 +8,7 @@ import androidx.compose.animation.core.tween
 import androidx.compose.foundation.layout.PaddingValues
 import androidx.compose.foundation.layout.padding
 import androidx.compose.runtime.Composable
+import androidx.compose.runtime.LaunchedEffect
 import androidx.compose.ui.Modifier
 import androidx.lifecycle.viewmodel.compose.viewModel
 import androidx.navigation.NavHostController
@@ -16,6 +17,7 @@ import androidx.navigation.navArgument
 import com.google.accompanist.navigation.animation.AnimatedNavHost
 import com.google.accompanist.navigation.animation.composable
 import com.potpiefry.data.dishes
+import com.potpiefry.ui.viewmodel.DetailsViewModel
 import com.potpiefry.ui.viewmodel.HomeViewModel
 import com.potpiefry.ui.viewmodel.NavigationViewModel
 import com.potpiefry.ui.viewmodel.SettingsViewModel
@@ -27,6 +29,7 @@ fun NavGraph(
 	navigationViewModel: NavigationViewModel = viewModel(),
 	innerPadding: PaddingValues,
 	homeViewModel: HomeViewModel = viewModel(),
+	detailsViewModel: DetailsViewModel = viewModel(),
 	settingsViewModel: SettingsViewModel = viewModel()
 ) {
 	AnimatedNavHost(
@@ -56,27 +59,26 @@ fun NavGraph(
 			},
 		) {
 			navigationViewModel.setNavigation(NavigationScreen.Home.title, NavigationScreen.Home.route)
-			HomeScreen(navController, navigationViewModel, homeViewModel)
+			HomeScreen(navController, homeViewModel)
 		}
 		composable(
 			route = NavigationScreen.Details.route,
 			arguments = listOf(navArgument("id") { type = NavType.IntType }),
 			enterTransition = {
 				slideIntoContainer(
-					AnimatedContentTransitionScope.SlideDirection.Up,
+					AnimatedContentTransitionScope.SlideDirection.Left,
 					animationSpec = tween(400)
 				)
 			},
 			exitTransition = {
 				slideOutOfContainer(
-					AnimatedContentTransitionScope.SlideDirection.Down,
+					AnimatedContentTransitionScope.SlideDirection.Right,
 					animationSpec = tween(400)
 				)
 			},
 		) {
 			val dishId = it.arguments?.getInt(DETAIL_ARGUMENT_KEY).toString().toInt()
-			navigationViewModel.setNavigation(dishes[dishId].name, NavigationScreen.Details.route)
-			DetailsScreen(navigationViewModel, dishId)
+			DetailsScreen(navigationViewModel, detailsViewModel, dishId)
 		}
 		composable(
 			route = NavigationScreen.Settings.route,
@@ -84,7 +86,7 @@ fun NavGraph(
 				when (initialState.destination.route) {
 					NavigationScreen.Settings.route -> EnterTransition.None
 					else -> slideIntoContainer(
-						AnimatedContentTransitionScope.SlideDirection.Left,
+						AnimatedContentTransitionScope.SlideDirection.Up,
 						animationSpec = tween(400)
 					)
 				}
@@ -93,7 +95,7 @@ fun NavGraph(
 				when (initialState.destination.route) {
 					NavigationScreen.Settings.route -> ExitTransition.None
 					else -> slideOutOfContainer(
-						AnimatedContentTransitionScope.SlideDirection.Left,
+						AnimatedContentTransitionScope.SlideDirection.Down,
 						animationSpec = tween(400)
 					)
 				}

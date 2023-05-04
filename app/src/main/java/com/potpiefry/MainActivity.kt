@@ -17,10 +17,10 @@ class MainActivity : ComponentActivity() {
 		WindowCompat.setDecorFitsSystemWindows(window, false)
 
 		setContent {
-			val preferencesViewModel: SettingsViewModel = viewModel()
-			val preferencesUiState by preferencesViewModel.uiState.collectAsState()
+			val settingsViewModel: SettingsViewModel = viewModel(factory = SettingsViewModel.Factory)
+			val settingsUiState by settingsViewModel.uiState.collectAsState()
 
-			PotPieFryTheme(darkTheme = preferencesUiState.theme) {
+			PotPieFryTheme(darkTheme = settingsUiState.theme.valueBool) {
 				MainScreen()
 			}
 		}

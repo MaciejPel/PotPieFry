@@ -19,6 +19,7 @@ import androidx.compose.material3.MaterialTheme
 import androidx.compose.material3.OutlinedTextField
 import androidx.compose.material3.Scaffold
 import androidx.compose.material3.Text
+import androidx.compose.material3.TopAppBar
 import androidx.compose.material3.TopAppBarDefaults
 import androidx.compose.material3.rememberDrawerState
 import androidx.compose.runtime.Composable
@@ -31,6 +32,7 @@ import androidx.compose.ui.unit.dp
 import androidx.lifecycle.viewmodel.compose.viewModel
 import com.google.accompanist.navigation.animation.rememberAnimatedNavController
 import com.potpiefry.ui.components.NavDrawer
+import com.potpiefry.ui.viewmodel.DetailsViewModel
 import com.potpiefry.ui.viewmodel.HomeViewModel
 import com.potpiefry.ui.viewmodel.NavigationViewModel
 import com.potpiefry.ui.viewmodel.SettingsViewModel
@@ -44,7 +46,7 @@ fun MainScreen(settingsViewModel: SettingsViewModel = viewModel()) {
 	val navigationUiState by navigationViewModel.uiState.collectAsState()
 
 	val homeViewModel: HomeViewModel = viewModel()
-	val homeUiState by homeViewModel.uiState.collectAsState()
+	val detailsViewModel: DetailsViewModel = viewModel()
 
 	val drawerState = rememberDrawerState(DrawerValue.Closed)
 	val drawerScope = rememberCoroutineScope()
@@ -56,7 +58,7 @@ fun MainScreen(settingsViewModel: SettingsViewModel = viewModel()) {
 			modifier = Modifier.nestedScroll(scrollBehavior.nestedScrollConnection),
 			topBar = {
 				if (!navigationUiState.route.contains("detail")) {
-					CenterAlignedTopAppBar(
+					TopAppBar(
 						scrollBehavior = scrollBehavior,
 						title = { Text(text = navigationUiState.title) },
 						navigationIcon = {
@@ -80,7 +82,7 @@ fun MainScreen(settingsViewModel: SettingsViewModel = viewModel()) {
 										.padding(horizontal = 12.dp)
 										.fillMaxWidth(),
 									shape = MaterialTheme.shapes.extraLarge,
-									value = homeUiState.query,
+									value = homeViewModel.query,
 									onValueChange = { homeViewModel.setQuery(it) },
 									singleLine = true,
 									maxLines = 1,
@@ -88,7 +90,7 @@ fun MainScreen(settingsViewModel: SettingsViewModel = viewModel()) {
 										Icon(Icons.Filled.Search, "Search")
 									},
 									trailingIcon = {
-										if (homeUiState.query.isNotEmpty()) {
+										if (homeViewModel.query.isNotEmpty()) {
 											IconButton(onClick = { homeViewModel.setQuery("") }) {
 												Icon(Icons.Filled.Close, "Empty")
 											}
@@ -107,12 +109,9 @@ fun MainScreen(settingsViewModel: SettingsViewModel = viewModel()) {
 						}
 					},
 					floatingActionButton = {
-						when (navigationUiState.title) {
-							NavigationScreen.Home.title -> null
-							NavigationScreen.Settings.title -> null
-							else -> {
-								ShareButton(navigationUiState.currentDish)
-							}
+						if (navigationUiState.route.contains("detail")) {
+							if (detailsViewModel.dish != null)
+								ShareButton(detailsViewModel.dish!!)
 						}
 					}
 				)
@@ -123,6 +122,7 @@ fun MainScreen(settingsViewModel: SettingsViewModel = viewModel()) {
 				navigationViewModel = navigationViewModel,
 				innerPadding = innerPadding,
 				homeViewModel = homeViewModel,
+				detailsViewModel = detailsViewModel,
 				settingsViewModel = settingsViewModel
 			)
 		}
