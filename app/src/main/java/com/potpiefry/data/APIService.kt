@@ -36,8 +36,7 @@ class DishPreview(
 	val img: String?,
 )
 
-
-const val BASE_URL = "http://192.168.100.2:3001/api/"
+const val BASE_URL = "https://ppf-backend.onrender.com/api/"
 
 interface APIService {
 	@GET("dish")

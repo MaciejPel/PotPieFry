@@ -1,6 +1,5 @@
 package com.potpiefry.data
 
-import android.util.Log
 import androidx.datastore.core.DataStore
 import androidx.datastore.preferences.core.Preferences
 import androidx.datastore.preferences.core.intPreferencesKey
@@ -17,7 +16,6 @@ class PreferencesRepository(
 	val isDarkTheme: Flow<Int> = dataStore.data
 		.catch {
 			if (it is IOException) {
-				Log.e(TAG, "Error reading preferences.", it)
 				emit(emptyPreferences())
 			} else {
 				throw it
