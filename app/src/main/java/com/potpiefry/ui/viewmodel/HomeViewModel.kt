@@ -8,15 +8,19 @@ import androidx.lifecycle.ViewModel
 import androidx.lifecycle.viewModelScope
 import com.potpiefry.data.APIService
 import com.potpiefry.data.DishPreview
-import com.potpiefry.data.TabType
 import kotlinx.coroutines.launch
+
+enum class TabType(val title: String, val value: String?) {
+	Start("Main View", null),
+	Local("Local", "local"),
+	Abroad("Abroad", "abroad")
+}
 
 val homeViewTabs = listOf(TabType.Start, TabType.Local, TabType.Abroad)
 
 class HomeViewModel : ViewModel() {
 	private val _dishList = mutableStateListOf<DishPreview>()
 	var errorMessage: String by mutableStateOf("")
-
 	private var _query: String by mutableStateOf("")
 
 	val dishList: List<DishPreview>
@@ -30,6 +34,7 @@ class HomeViewModel : ViewModel() {
 			try {
 				_dishList.clear()
 				_dishList.addAll(apiService.getDishes())
+				errorMessage = ""
 
 			} catch (e: Exception) {
 				errorMessage = e.message.toString()

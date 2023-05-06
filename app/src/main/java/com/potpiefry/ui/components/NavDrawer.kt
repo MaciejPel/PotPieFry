@@ -18,10 +18,12 @@ import androidx.compose.runtime.Composable
 import androidx.compose.runtime.collectAsState
 import androidx.compose.runtime.getValue
 import androidx.compose.ui.Modifier
+import androidx.compose.ui.res.stringResource
 import androidx.compose.ui.text.font.FontWeight
 import androidx.compose.ui.unit.dp
 import androidx.navigation.NavController
 import androidx.navigation.NavGraph.Companion.findStartDestination
+import com.potpiefry.R
 import com.potpiefry.ui.theme.shapeScheme
 import com.potpiefry.ui.view.NavigationScreen
 import com.potpiefry.ui.viewmodel.NavigationViewModel
@@ -52,7 +54,7 @@ fun NavDrawer(
 				drawerShape = MaterialTheme.shapeScheme.none
 			) {
 				Text(
-					text = "PotPieFry",
+					text = stringResource(id = R.string.app_name),
 					fontSize = MaterialTheme.typography.headlineSmall.fontSize,
 					fontWeight = FontWeight.SemiBold,
 					modifier = Modifier.padding(start = 16.dp, top = 12.dp, bottom = 12.dp)

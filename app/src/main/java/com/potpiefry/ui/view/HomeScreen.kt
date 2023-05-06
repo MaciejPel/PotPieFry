@@ -40,8 +40,8 @@ import coil.compose.AsyncImage
 import coil.request.ImageRequest
 import com.potpiefry.R
 import com.potpiefry.data.DishPreview
-import com.potpiefry.data.TabType
 import com.potpiefry.ui.viewmodel.HomeViewModel
+import com.potpiefry.ui.viewmodel.TabType
 import com.potpiefry.ui.viewmodel.homeViewTabs
 import kotlinx.coroutines.launch
 

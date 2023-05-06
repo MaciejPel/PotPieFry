@@ -14,15 +14,15 @@ sealed class NavigationScreen(
 	val icon: ImageVector
 ) {
 	object Home :
-		NavigationScreen("home", "Start", Icons.Default.Home)
+		NavigationScreen("home", "Home", Icons.Filled.Home)
 
 	object Details :
-		NavigationScreen("details/{$DETAIL_ARGUMENT_KEY}", "Szczegóły", Icons.Default.Star) {
+		NavigationScreen("details/{$DETAIL_ARGUMENT_KEY}", "Details", Icons.Filled.Star) {
 		fun passId(id: Int): String {
 			return "details/$id"
 		}
 	}
 
 	object Settings :
-		NavigationScreen("settings", "Ustawienia", Icons.Default.Settings)
+		NavigationScreen("settings", "Settings", Icons.Filled.Settings)
 }
