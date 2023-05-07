@@ -8,60 +8,74 @@ import androidx.lifecycle.viewModelScope
 import com.potpiefry.data.APIService
 import com.potpiefry.data.Dish
 import kotlinx.coroutines.launch
+import java.util.Timer
 import kotlin.concurrent.fixedRateTimer
 import kotlin.time.Duration
 import kotlin.time.Duration.Companion.hours
 import kotlin.time.Duration.Companion.minutes
 import kotlin.time.Duration.Companion.seconds
 
-class Timer(
-	val id: Int,
-	val index: Int,
-	var remaining: Duration
+class Current(
+  val id: Int,
+  val index: Int,
+  val timer: Timer
 )
 
 class DetailsViewModel : ViewModel() {
-	private var _dish: Dish? by mutableStateOf(null)
-	var errorMessage: String by mutableStateOf("")
-	private var _timer: Timer? by mutableStateOf(null)
+  private var _dish: Dish? by mutableStateOf(null)
+  var errorMessage: String by mutableStateOf("")
+  private var _timer: Current? by mutableStateOf(null)
+  private var _remaining: Duration? by mutableStateOf(null)
 
 
-	val timer: Timer?
-		get() = _timer
+  val timer: Current?
+    get() = _timer
 
-	val dish: Dish?
-		get() = _dish
+  val remaining: Duration?
+    get() = _remaining
 
-	fun getDish(id: Int) {
-		viewModelScope.launch {
-			val apiService = APIService.getInstance()
-			try {
-				_dish = null
-				_dish = apiService.getDish(id)
-				errorMessage = ""
+  val dish: Dish?
+    get() = _dish
 
-			} catch (e: Exception) {
-				errorMessage = e.message.toString()
-			}
-		}
-	}
+  fun getDish(id: Int) {
+    viewModelScope.launch {
+      val apiService = APIService.getInstance()
+      try {
+        _dish = null
+        _dish = apiService.getDish(id)
+        errorMessage = ""
 
-	fun createTimer(
-		id: Int,
-		index: Int,
-		h: Int,
-		m: Int,
-		s: Int,
-	) {
-		val duration = h.hours + m.minutes + s.seconds
-		_timer = Timer(id, index, duration)
-		launchTimer()
-	}
+      } catch (e: Exception) {
+        errorMessage = e.message.toString()
+      }
+    }
+  }
 
-	private fun launchTimer() {
-		fixedRateTimer(initialDelay = 1000L, period = 1000L) {
-			_timer =
-				Timer(_timer!!.id, _timer!!.index, _timer?.remaining?.minus(1.seconds) ?: 0.seconds)
-		}
-	}
+  fun createTimer(
+    id: Int,
+    index: Int,
+    h: Int,
+    m: Int,
+    s: Int,
+  ) {
+    if (_timer != null) {
+      _timer!!.timer.cancel()
+      _timer = null
+    }
+    if (_remaining != null) _remaining = null
+
+    var base = h.hours + m.minutes + s.seconds
+    val t = fixedRateTimer(initialDelay = 1000L, period = 1000L) {
+      base = base.minus(1.seconds)
+      _remaining = if (base.inWholeSeconds == 0L) {
+        _timer!!.timer.cancel()
+        null
+      } else {
+        base
+      }
+    }
+    _timer = Current(id, index, t)
+  }
+
+
 }
