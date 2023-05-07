@@ -58,20 +58,21 @@ class DetailsViewModel : ViewModel() {
     m: Int,
     s: Int,
   ) {
-    if (_timer != null) {
+    if (_timer != null || _remaining != null) {
       _timer!!.timer.cancel()
       _timer = null
+      _remaining = null
     }
-    if (_remaining != null) _remaining = null
 
     var base = h.hours + m.minutes + s.seconds
     val t = fixedRateTimer(initialDelay = 1000L, period = 1000L) {
       base = base.minus(1.seconds)
-      _remaining = if (base.inWholeSeconds == 0L) {
+      if (base.inWholeSeconds == 0L) {
         _timer!!.timer.cancel()
-        null
+        _remaining = null
+        _timer = null
       } else {
-        base
+        _remaining = base
       }
     }
     _timer = Current(id, index, t)
