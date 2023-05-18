@@ -8,8 +8,8 @@ import androidx.compose.foundation.layout.Column
 import androidx.compose.foundation.layout.PaddingValues
 import androidx.compose.foundation.layout.Row
 import androidx.compose.foundation.layout.aspectRatio
-import androidx.compose.foundation.layout.defaultMinSize
 import androidx.compose.foundation.layout.fillMaxSize
+import androidx.compose.foundation.layout.fillMaxWidth
 import androidx.compose.foundation.layout.padding
 import androidx.compose.foundation.layout.size
 import androidx.compose.foundation.lazy.grid.GridCells
@@ -17,7 +17,12 @@ import androidx.compose.foundation.lazy.grid.LazyVerticalGrid
 import androidx.compose.foundation.lazy.grid.items
 import androidx.compose.foundation.pager.HorizontalPager
 import androidx.compose.foundation.pager.rememberPagerState
+import androidx.compose.material.icons.Icons
+import androidx.compose.material.icons.filled.Refresh
 import androidx.compose.material3.Card
+import androidx.compose.material3.ElevatedButton
+import androidx.compose.material3.Icon
+import androidx.compose.material3.LinearProgressIndicator
 import androidx.compose.material3.MaterialTheme
 import androidx.compose.material3.Tab
 import androidx.compose.material3.TabRow
@@ -30,6 +35,7 @@ import androidx.compose.ui.Modifier
 import androidx.compose.ui.layout.ContentScale
 import androidx.compose.ui.platform.LocalContext
 import androidx.compose.ui.res.painterResource
+import androidx.compose.ui.text.style.TextAlign
 import androidx.compose.ui.text.style.TextOverflow
 import androidx.compose.ui.unit.dp
 import androidx.compose.ui.unit.sp
@@ -59,7 +65,9 @@ fun HomeScreen(
 	})
 
 	Column(modifier = Modifier.fillMaxSize()) {
-		if (homeViewModel.errorMessage.isEmpty()) {
+		if (homeViewModel.loading)
+			LinearProgressIndicator(modifier = Modifier.fillMaxWidth())
+		if (!homeViewModel.loading && homeViewModel.errorMessage.isEmpty()) {
 			val dishes =
 				homeViewModel.dishList.filter {
 					it.name.lowercase().contains(homeViewModel.query.lowercase())
@@ -94,8 +102,31 @@ fun HomeScreen(
 					}
 				}
 			}
-		} else {
-			Text(homeViewModel.errorMessage)
+		}
+		if (!homeViewModel.loading && homeViewModel.errorMessage.isNotEmpty()) {
+			Column(
+				modifier = Modifier
+					.fillMaxSize()
+					.padding(12.dp),
+				horizontalAlignment = Alignment.CenterHorizontally,
+				verticalArrangement = Arrangement.Center,
+			) {
+				Text(
+					"Error: " + homeViewModel.errorMessage,
+					color = MaterialTheme.colorScheme.primary,
+					fontSize = MaterialTheme.typography.bodyMedium.fontSize,
+					fontWeight = MaterialTheme.typography.bodyMedium.fontWeight,
+					fontStyle = MaterialTheme.typography.bodyMedium.fontStyle,
+					textAlign = TextAlign.Center,
+					modifier = Modifier.padding(vertical = 12.dp)
+				)
+				ElevatedButton(onClick = {
+					homeViewModel.getDishList()
+				}) {
+					Icon(Icons.Filled.Refresh, "Refresh")
+					Text("Try again")
+				}
+			}
 		}
 	}
 }

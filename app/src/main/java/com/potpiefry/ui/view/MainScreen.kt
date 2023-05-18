@@ -1,6 +1,5 @@
 package com.potpiefry.ui.view
 
-import android.util.Log
 import androidx.compose.animation.ExperimentalAnimationApi
 import androidx.compose.foundation.layout.fillMaxWidth
 import androidx.compose.foundation.layout.imePadding
@@ -9,7 +8,6 @@ import androidx.compose.material.icons.Icons
 import androidx.compose.material.icons.filled.ArrowBack
 import androidx.compose.material.icons.filled.Close
 import androidx.compose.material.icons.filled.Menu
-import androidx.compose.material.icons.filled.Refresh
 import androidx.compose.material.icons.filled.Search
 import androidx.compose.material3.BottomAppBar
 import androidx.compose.material3.DrawerValue
@@ -68,14 +66,6 @@ fun MainScreen(settingsViewModel: SettingsViewModel = viewModel()) {
 							}) {
 								Icon(Icons.Filled.Menu, "Menu")
 							}
-						},
-						actions = {
-							if (navigationUiState.route == "home")
-								IconButton(onClick = {
-									homeViewModel.getDishList()
-								}) {
-									Icon(Icons.Filled.Refresh, "Refresh")
-								}
 						}
 					)
 				}
@@ -114,13 +104,6 @@ fun MainScreen(settingsViewModel: SettingsViewModel = viewModel()) {
 								}) {
 									Icon(Icons.Filled.ArrowBack, "Back")
 								}
-								if (navigationUiState.route.contains("detail"))
-									IconButton(onClick = {
-										Log.d("X", navigationUiState.route)
-										detailsViewModel.getDish(navigationUiState.route.split("/")[1].toInt())
-									}) {
-										Icon(Icons.Filled.Refresh, "Refresh")
-									}
 							}
 						}
 					},
@@ -139,7 +122,9 @@ fun MainScreen(settingsViewModel: SettingsViewModel = viewModel()) {
 				innerPadding = innerPadding,
 				homeViewModel = homeViewModel,
 				detailsViewModel = detailsViewModel,
-				settingsViewModel = settingsViewModel
+				settingsViewModel = settingsViewModel,
+				drawerState = drawerState,
+				drawerScope = drawerScope
 			)
 		}
 	}

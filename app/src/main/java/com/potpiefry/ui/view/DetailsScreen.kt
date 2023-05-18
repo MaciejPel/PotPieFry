@@ -18,14 +18,20 @@ import androidx.compose.foundation.lazy.LazyColumn
 import androidx.compose.foundation.lazy.rememberLazyListState
 import androidx.compose.foundation.shape.CircleShape
 import androidx.compose.material.icons.Icons
+import androidx.compose.material.icons.filled.Menu
+import androidx.compose.material.icons.filled.Refresh
 import androidx.compose.material.icons.filled.Save
 import androidx.compose.material.icons.filled.Timer
 import androidx.compose.material3.BottomAppBarDefaults
 import androidx.compose.material3.Card
+import androidx.compose.material3.DrawerState
 import androidx.compose.material3.ElevatedButton
+import androidx.compose.material3.ExperimentalMaterial3Api
 import androidx.compose.material3.FloatingActionButton
 import androidx.compose.material3.FloatingActionButtonDefaults
 import androidx.compose.material3.Icon
+import androidx.compose.material3.IconButton
+import androidx.compose.material3.LinearProgressIndicator
 import androidx.compose.material3.MaterialTheme
 import androidx.compose.material3.Text
 import androidx.compose.runtime.Composable
@@ -44,6 +50,7 @@ import androidx.compose.ui.layout.onGloballyPositioned
 import androidx.compose.ui.platform.LocalContext
 import androidx.compose.ui.platform.LocalDensity
 import androidx.compose.ui.res.painterResource
+import androidx.compose.ui.text.style.TextAlign
 import androidx.compose.ui.unit.IntSize
 import androidx.compose.ui.unit.dp
 import androidx.compose.ui.zIndex
@@ -53,268 +60,312 @@ import com.potpiefry.R
 import com.potpiefry.data.Dish
 import com.potpiefry.ui.viewmodel.DetailsViewModel
 import com.potpiefry.ui.viewmodel.NavigationViewModel
+import kotlinx.coroutines.CoroutineScope
+import kotlinx.coroutines.launch
 
-
+@OptIn(ExperimentalMaterial3Api::class)
 @Composable
 fun DetailsScreen(
-  navigationViewModel: NavigationViewModel,
-  detailsViewModel: DetailsViewModel,
-  dishId: Int
+	navigationViewModel: NavigationViewModel,
+	detailsViewModel: DetailsViewModel,
+	dishId: Int,
+	drawerState: DrawerState,
+	drawerScope: CoroutineScope,
 ) {
-  val listState = rememberLazyListState()
-  val overlapHeightPx = with(LocalDensity.current) {
-    (200.dp).toPx() - (64.dp).toPx()
-  }
+	val listState = rememberLazyListState()
+	val overlapHeightPx = with(LocalDensity.current) {
+		(200.dp).toPx() - (64.dp).toPx()
+	}
 
-  val isCollapsed: Boolean by remember {
-    derivedStateOf {
-      val isFirstItemHidden = listState.firstVisibleItemScrollOffset > overlapHeightPx
-      isFirstItemHidden || listState.firstVisibleItemIndex > 0
-    }
-  }
+	val isCollapsed: Boolean by remember {
+		derivedStateOf {
+			val isFirstItemHidden = listState.firstVisibleItemScrollOffset > overlapHeightPx
+			isFirstItemHidden || listState.firstVisibleItemIndex > 0
+		}
+	}
 
-  LaunchedEffect(Unit, block = {
-    detailsViewModel.getDish(dishId)
-  })
+	LaunchedEffect(Unit, block = {
+		detailsViewModel.getDish(dishId)
+	})
 
-  navigationViewModel.setNavigation(
-    detailsViewModel.dish?.name ?: "",
-    NavigationScreen.Details.passId(dishId)
-  )
+	navigationViewModel.setNavigation(
+		detailsViewModel.dish?.name ?: "",
+		NavigationScreen.Details.passId(dishId)
+	)
 
-  Box {
-    if (detailsViewModel.errorMessage.isEmpty() && detailsViewModel.dish != null) {
-      val dish = detailsViewModel.dish!!
-      CollapsedTopBar(
-        modifier = Modifier.zIndex(2f),
-        isCollapsed = isCollapsed,
-        title = dish.name
-      )
-      LazyColumn(state = listState, modifier = Modifier.fillMaxSize()) {
-        item { ExpandedTopBar(dish.name, dish.img) }
-        item {
-          Column(
-            modifier = Modifier
-              .fillMaxSize()
-              .padding(16.dp),
-            horizontalAlignment = Alignment.CenterHorizontally,
-            verticalArrangement = Arrangement.Center
-          ) {
-            Card {
-              Column(modifier = Modifier.fillMaxWidth()) {
-                Column(modifier = Modifier.padding(8.dp)) {
-                  Text(
-                    text = "Description",
-                    fontSize = MaterialTheme.typography.labelLarge.fontSize,
-                    fontWeight = MaterialTheme.typography.labelLarge.fontWeight,
-                    fontStyle = MaterialTheme.typography.labelLarge.fontStyle,
-                    lineHeight = MaterialTheme.typography.labelLarge.lineHeight
+	Box(modifier = Modifier.fillMaxSize()) {
+		if (detailsViewModel.loading)
+			LinearProgressIndicator(modifier = Modifier.fillMaxWidth())
+		if (!detailsViewModel.loading && detailsViewModel.errorMessage.isEmpty() && detailsViewModel.dish != null) {
+			val dish = detailsViewModel.dish!!
+			CollapsedTopBar(
+				modifier = Modifier.zIndex(2f),
+				isCollapsed = isCollapsed,
+				title = dish.name,
+				drawerState = drawerState,
+				drawerScope = drawerScope
+			)
+			LazyColumn(state = listState, modifier = Modifier.fillMaxSize()) {
+				item { ExpandedTopBar(dish.name, dish.img) }
+				item {
+					Column(
+						modifier = Modifier
+							.fillMaxSize()
+							.padding(16.dp),
+						horizontalAlignment = Alignment.CenterHorizontally,
+						verticalArrangement = Arrangement.Center
+					) {
+						Card {
+							Column(modifier = Modifier.fillMaxWidth()) {
+								Column(modifier = Modifier.padding(8.dp)) {
+									Text(
+										text = "Description",
+										fontSize = MaterialTheme.typography.labelLarge.fontSize,
+										fontWeight = MaterialTheme.typography.labelLarge.fontWeight,
+										fontStyle = MaterialTheme.typography.labelLarge.fontStyle,
+										lineHeight = MaterialTheme.typography.labelLarge.lineHeight
+									)
+									Text(
+										text = dish.description,
+										fontSize = MaterialTheme.typography.bodyMedium.fontSize,
+										fontWeight = MaterialTheme.typography.bodyMedium.fontWeight,
+										fontStyle = MaterialTheme.typography.bodyMedium.fontStyle,
+										lineHeight = MaterialTheme.typography.bodyMedium.lineHeight
+									)
+								}
+								Column(modifier = Modifier.padding(8.dp)) {
+									Text(
+										text = "Ingredients",
+										fontSize = MaterialTheme.typography.labelLarge.fontSize,
+										fontWeight = MaterialTheme.typography.labelLarge.fontWeight,
+										fontStyle = MaterialTheme.typography.labelLarge.fontStyle,
+										lineHeight = MaterialTheme.typography.labelLarge.lineHeight
+									)
+									Column {
+										dish.ingredients.forEach { ing ->
+											Row(verticalAlignment = Alignment.CenterVertically) {
+												Box(
+													modifier = Modifier
+														.padding(4.dp)
+														.size(4.dp)
+														.background(
+															MaterialTheme.colorScheme.onSurfaceVariant,
+															shape = CircleShape
+														),
+												)
+												Text(
+													text = "${ing.amount}${if (ing.unit.isNotEmpty()) " ${ing.unit}" else ""} of ${ing.ingredient}",
+													fontSize = MaterialTheme.typography.bodyMedium.fontSize,
+													fontWeight = MaterialTheme.typography.bodyMedium.fontWeight,
+													fontStyle = MaterialTheme.typography.bodyMedium.fontStyle,
+													lineHeight = MaterialTheme.typography.bodyMedium.lineHeight,
+												)
+											}
+										}
+									}
+								}
+								Column(modifier = Modifier.padding(8.dp)) {
+									Text(
+										text = "Steps",
+										fontSize = MaterialTheme.typography.labelLarge.fontSize,
+										fontWeight = MaterialTheme.typography.labelLarge.fontWeight,
+										fontStyle = MaterialTheme.typography.labelLarge.fontStyle,
+										lineHeight = MaterialTheme.typography.labelLarge.lineHeight
 
-                  )
-                  Text(
-                    text = dish.description,
-                    fontSize = MaterialTheme.typography.bodyMedium.fontSize,
-                    fontWeight = MaterialTheme.typography.bodyMedium.fontWeight,
-                    fontStyle = MaterialTheme.typography.bodyMedium.fontStyle,
-                    lineHeight = MaterialTheme.typography.bodyMedium.lineHeight
-                  )
-                }
-                Column(modifier = Modifier.padding(8.dp)) {
-                  Text(
-                    text = "Ingredients",
-                    fontSize = MaterialTheme.typography.labelLarge.fontSize,
-                    fontWeight = MaterialTheme.typography.labelLarge.fontWeight,
-                    fontStyle = MaterialTheme.typography.labelLarge.fontStyle,
-                    lineHeight = MaterialTheme.typography.labelLarge.lineHeight
-                  )
-                  Column {
-                    dish.ingredients.forEach { ing ->
-                      Row(verticalAlignment = Alignment.CenterVertically) {
-                        Box(
-                          modifier = Modifier
-                            .padding(4.dp)
-                            .size(4.dp)
-                            .background(
-                              MaterialTheme.colorScheme.onSurfaceVariant,
-                              shape = CircleShape
-                            ),
-                        )
-                        Text(
-                          text = "${ing.amount}${if (ing.unit.isNotEmpty()) " ${ing.unit}" else ""} of ${ing.ingredient}",
-                          fontSize = MaterialTheme.typography.bodyMedium.fontSize,
-                          fontWeight = MaterialTheme.typography.bodyMedium.fontWeight,
-                          fontStyle = MaterialTheme.typography.bodyMedium.fontStyle,
-                          lineHeight = MaterialTheme.typography.bodyMedium.lineHeight,
-                        )
-                      }
-                    }
-                  }
-                }
-                Column(modifier = Modifier.padding(8.dp)) {
-                  Text(
-                    text = "Steps",
-                    fontSize = MaterialTheme.typography.labelLarge.fontSize,
-                    fontWeight = MaterialTheme.typography.labelLarge.fontWeight,
-                    fontStyle = MaterialTheme.typography.labelLarge.fontStyle,
-                    lineHeight = MaterialTheme.typography.labelLarge.lineHeight
-
-                  )
-                  Column {
-                    dish.steps.forEachIndexed { index, step ->
-                      Text(
-                        text = "${index + 1}. ${step.description}",
-                        fontSize = MaterialTheme.typography.bodyMedium.fontSize,
-                        fontWeight = MaterialTheme.typography.bodyMedium.fontWeight,
-                        fontStyle = MaterialTheme.typography.bodyMedium.fontStyle,
-                        lineHeight = MaterialTheme.typography.bodyMedium.lineHeight,
-                      )
-                      if (step.duration != null && step.durationUnit != null)
-                        Column(
-                          modifier = Modifier.fillMaxWidth(),
-                          horizontalAlignment = Alignment.End
-                        ) {
-                          val timer = detailsViewModel.timer
-                          val remaining = detailsViewModel.remaining
-                          val h = if (step.durationUnit == "h") step.duration else 0
-                          val m = if (step.durationUnit == "min") step.duration else 0
-                          val s = if (step.durationUnit == "s") step.duration else 0
-                          ElevatedButton(
-                            onClick = {
-                              detailsViewModel.createTimer(
-                                dishId,
-                                index,
-                                h,
-                                m,
-                                s
-                              )
-                            },
-                            modifier = Modifier.padding(bottom = 4.dp)
-                          ) {
-                            Icon(Icons.Filled.Timer, "Timer")
-                            Text(text = "${step.duration}${step.durationUnit}")
-                            if (remaining != null && timer != null && timer.id == dishId && timer.index == index)
-                              Text(text = ", ${remaining.inWholeSeconds}s")
-                          }
-                        }
-                    }
-                  }
-                }
-              }
-            }
-          }
-        }
-      }
-    } else {
-      Text(detailsViewModel.errorMessage)
-    }
-  }
+									)
+									Column {
+										dish.steps.forEachIndexed { index, step ->
+											Text(
+												text = "${index + 1}. ${step.description}",
+												fontSize = MaterialTheme.typography.bodyMedium.fontSize,
+												fontWeight = MaterialTheme.typography.bodyMedium.fontWeight,
+												fontStyle = MaterialTheme.typography.bodyMedium.fontStyle,
+												lineHeight = MaterialTheme.typography.bodyMedium.lineHeight,
+											)
+											if (step.duration != null && step.durationUnit != null)
+												Column(
+													modifier = Modifier.fillMaxWidth(),
+													horizontalAlignment = Alignment.End
+												) {
+													val timer = detailsViewModel.timer
+													val remaining = detailsViewModel.remaining
+													val h = if (step.durationUnit == "h") step.duration else 0
+													val m = if (step.durationUnit == "min") step.duration else 0
+													val s = if (step.durationUnit == "s") step.duration else 0
+													ElevatedButton(
+														onClick = {
+															detailsViewModel.createTimer(
+																dishId,
+																index,
+																h,
+																m,
+																s
+															)
+														},
+														modifier = Modifier.padding(bottom = 4.dp)
+													) {
+														Icon(Icons.Filled.Timer, "Timer")
+														Text(text = "${step.duration}${step.durationUnit}")
+														if (remaining != null && timer != null && timer.id == dishId && timer.index == index)
+															Text(text = ", ${remaining.inWholeSeconds}s")
+													}
+												}
+										}
+									}
+								}
+							}
+						}
+					}
+				}
+			}
+		}
+		if (!detailsViewModel.loading && detailsViewModel.errorMessage.isNotEmpty()) {
+			Column(
+				modifier = Modifier
+					.fillMaxSize()
+					.padding(12.dp),
+				horizontalAlignment = Alignment.CenterHorizontally,
+				verticalArrangement = Arrangement.Center,
+			) {
+				Text(
+					"Error: " + detailsViewModel.errorMessage,
+					color = MaterialTheme.colorScheme.primary,
+					fontSize = MaterialTheme.typography.bodyMedium.fontSize,
+					fontWeight = MaterialTheme.typography.bodyMedium.fontWeight,
+					fontStyle = MaterialTheme.typography.bodyMedium.fontStyle,
+					textAlign = TextAlign.Center,
+					modifier = Modifier.padding(vertical = 12.dp)
+				)
+				ElevatedButton(onClick = {
+					detailsViewModel.getDish(dishId)
+				}) {
+					Icon(Icons.Filled.Refresh, "Refresh")
+					Text("Try again")
+				}
+			}
+		}
+	}
 }
 
 @Composable
 fun ShareButton(dish: Dish) {
-  val sendIntent: Intent = Intent().apply {
-    action = Intent.ACTION_SEND
-    putExtra(
-      Intent.EXTRA_TEXT,
-      dish.name + "\n" + dish.ingredients.joinToString(
-        prefix = "- ",
-        separator = ",\n- ",
-        postfix = "\nEnjoy 🥰"
-      ) { ing -> "${ing.amount}${if (ing.unit.isNotEmpty()) " ${ing.unit}" else ""} of ${ing.ingredient}" })
-    type = "text/plain"
-  }
-  val shareIntent = Intent.createChooser(sendIntent, null)
-  val context = LocalContext.current
+	val sendIntent: Intent = Intent().apply {
+		action = Intent.ACTION_SEND
+		putExtra(
+			Intent.EXTRA_TEXT,
+			dish.name + "\n" + dish.ingredients.joinToString(
+				prefix = "- ",
+				separator = ",\n- ",
+				postfix = "\nEnjoy 🥰"
+			) { ing -> "${ing.amount}${if (ing.unit.isNotEmpty()) " ${ing.unit}" else ""} of ${ing.ingredient}" })
+		type = "text/plain"
+	}
+	val shareIntent = Intent.createChooser(sendIntent, null)
+	val context = LocalContext.current
 
-  FloatingActionButton(
-    onClick = {
-      context.startActivity(shareIntent)
-    },
-    containerColor = BottomAppBarDefaults.bottomAppBarFabColor,
-    elevation = FloatingActionButtonDefaults.bottomAppBarFabElevation()
-  ) {
-    Icon(Icons.Filled.Save, "Save")
-  }
+	FloatingActionButton(
+		onClick = {
+			context.startActivity(shareIntent)
+		},
+		containerColor = BottomAppBarDefaults.bottomAppBarFabColor,
+		elevation = FloatingActionButtonDefaults.bottomAppBarFabElevation()
+	) {
+		Icon(Icons.Filled.Save, "Save")
+	}
 }
 
 @Composable
 private fun ExpandedTopBar(title: String, img: String?) {
-  var sizeImage by remember {
-    mutableStateOf(IntSize.Zero)
-  }
-  val gradient = Brush.verticalGradient(
-    colors = listOf(Color.Transparent, MaterialTheme.colorScheme.background),
-    startY = sizeImage.height.toFloat() / 3,
-    endY = sizeImage.height.toFloat()
-  )
+	var sizeImage by remember { mutableStateOf(IntSize.Zero) }
+	val gradient = Brush.verticalGradient(
+		colors = listOf(Color.Transparent, MaterialTheme.colorScheme.background),
+		startY = sizeImage.height.toFloat() / 3,
+		endY = sizeImage.height.toFloat()
+	)
 
-  Box(
-    modifier = Modifier
-      .background(MaterialTheme.colorScheme.primaryContainer)
-      .fillMaxWidth()
-      .height(200.dp),
-    contentAlignment = Alignment.BottomStart
-  ) {
-    if (img == null) {
-      Image(
-        painterResource(R.drawable.placeholder),
-        modifier = Modifier.fillMaxSize(),
-        contentDescription = null,
-        contentScale = ContentScale.Crop,
-      )
-    } else {
-      AsyncImage(
-        modifier = Modifier
-          .fillMaxSize()
-          .onGloballyPositioned {
-            sizeImage = it.size
-          },
-        model = ImageRequest.Builder(LocalContext.current)
-          .data(img)
-
-          .crossfade(true)
-          .build(),
-        placeholder = painterResource(R.drawable.placeholder),
-        contentDescription = null,
-        contentScale = ContentScale.Crop,
-      )
-      Box(
-        modifier = Modifier
-          .matchParentSize()
-          .background(gradient)
-      )
-    }
-    Text(
-      modifier = Modifier.padding(16.dp),
-      text = title,
-      fontSize = MaterialTheme.typography.headlineLarge.fontSize,
-      fontWeight = MaterialTheme.typography.headlineLarge.fontWeight,
-      fontStyle = MaterialTheme.typography.headlineLarge.fontStyle,
-      color = MaterialTheme.colorScheme.primary,
-    )
-  }
+	Box(
+		modifier = Modifier
+			.background(MaterialTheme.colorScheme.primaryContainer)
+			.fillMaxWidth()
+			.height(200.dp),
+		contentAlignment = Alignment.BottomStart
+	) {
+		if (img == null) {
+			Image(
+				painterResource(R.drawable.placeholder),
+				modifier = Modifier.fillMaxSize(),
+				contentDescription = null,
+				contentScale = ContentScale.Crop,
+			)
+		} else {
+			AsyncImage(
+				modifier = Modifier
+					.fillMaxSize()
+					.onGloballyPositioned {
+						sizeImage = it.size
+					},
+				model = ImageRequest.Builder(LocalContext.current)
+					.data(img)
+					.crossfade(true)
+					.build(),
+				placeholder = painterResource(R.drawable.placeholder),
+				contentDescription = null,
+				contentScale = ContentScale.Crop,
+			)
+			Box(
+				modifier = Modifier
+					.matchParentSize()
+					.background(gradient)
+			)
+		}
+		Text(
+			modifier = Modifier.padding(16.dp),
+			text = title,
+			fontSize = MaterialTheme.typography.headlineLarge.fontSize,
+			fontWeight = MaterialTheme.typography.headlineLarge.fontWeight,
+			fontStyle = MaterialTheme.typography.headlineLarge.fontStyle,
+			color = MaterialTheme.colorScheme.primary,
+		)
+	}
 }
 
+@OptIn(ExperimentalMaterial3Api::class)
 @Composable
-private fun CollapsedTopBar(modifier: Modifier = Modifier, isCollapsed: Boolean, title: String) {
-  val color: Color by animateColorAsState(
-    if (isCollapsed) MaterialTheme.colorScheme.background else Color.Transparent
-  )
-  Box(
-    modifier = modifier
-      .background(color)
-      .fillMaxWidth()
-      .height(64.dp)
-      .padding(16.dp),
-    contentAlignment = Alignment.BottomStart
-  ) {
-    AnimatedVisibility(visible = isCollapsed) {
-      Text(
-        text = title,
-        fontSize = MaterialTheme.typography.headlineSmall.fontSize,
-        fontWeight = MaterialTheme.typography.headlineSmall.fontWeight,
-        fontStyle = MaterialTheme.typography.headlineSmall.fontStyle
-      )
-    }
-  }
+private fun CollapsedTopBar(
+	modifier: Modifier = Modifier,
+	isCollapsed: Boolean,
+	title: String,
+	drawerState: DrawerState,
+	drawerScope: CoroutineScope,
+) {
+	val color: Color by animateColorAsState(
+		if (isCollapsed) MaterialTheme.colorScheme.background else Color.Transparent
+	)
+	Box(
+		modifier = modifier
+			.background(color)
+			.fillMaxWidth()
+			.height(64.dp)
+			.padding(horizontal = 4.dp, vertical = 16.dp),
+		contentAlignment = Alignment.BottomStart
+	) {
+		AnimatedVisibility(visible = isCollapsed) {
+			Row(
+				horizontalArrangement = Arrangement.spacedBy(4.dp),
+				verticalAlignment = Alignment.CenterVertically
+			) {
+				IconButton(onClick = {
+					drawerScope.launch { drawerState.open() }
+				}) {
+					Icon(Icons.Filled.Menu, "Menu")
+				}
+				Text(
+					text = title,
+					fontSize = MaterialTheme.typography.headlineSmall.fontSize,
+					fontWeight = MaterialTheme.typography.headlineSmall.fontWeight,
+					fontStyle = MaterialTheme.typography.headlineSmall.fontStyle
+				)
+			}
+		}
+	}
 }

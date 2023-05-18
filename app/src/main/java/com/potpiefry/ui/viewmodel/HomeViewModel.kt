@@ -21,6 +21,7 @@ val homeViewTabs = listOf(TabType.Start, TabType.Local, TabType.Abroad)
 class HomeViewModel : ViewModel() {
 	private val _dishList = mutableStateListOf<DishPreview>()
 	var errorMessage: String by mutableStateOf("")
+	var loading: Boolean by mutableStateOf(false)
 	private var _query: String by mutableStateOf("")
 
 	val dishList: List<DishPreview>
@@ -30,14 +31,17 @@ class HomeViewModel : ViewModel() {
 
 	fun getDishList() {
 		viewModelScope.launch {
+			loading = true
 			val apiService = APIService.getInstance()
 			try {
 				_dishList.clear()
 				_dishList.addAll(apiService.getDishes())
 				errorMessage = ""
+				loading = false
 
 			} catch (e: Exception) {
 				errorMessage = e.message.toString()
+				loading = false
 			}
 		}
 	}
