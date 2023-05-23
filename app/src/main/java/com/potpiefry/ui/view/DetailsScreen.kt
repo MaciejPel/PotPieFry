@@ -5,6 +5,7 @@ import androidx.compose.animation.AnimatedVisibility
 import androidx.compose.animation.animateColorAsState
 import androidx.compose.foundation.Image
 import androidx.compose.foundation.background
+import androidx.compose.foundation.clickable
 import androidx.compose.foundation.layout.Arrangement
 import androidx.compose.foundation.layout.Box
 import androidx.compose.foundation.layout.Column
@@ -18,6 +19,7 @@ import androidx.compose.foundation.lazy.LazyColumn
 import androidx.compose.foundation.lazy.rememberLazyListState
 import androidx.compose.foundation.shape.CircleShape
 import androidx.compose.material.icons.Icons
+import androidx.compose.material.icons.filled.Close
 import androidx.compose.material.icons.filled.Menu
 import androidx.compose.material.icons.filled.Refresh
 import androidx.compose.material.icons.filled.Save
@@ -38,6 +40,7 @@ import androidx.compose.runtime.Composable
 import androidx.compose.runtime.LaunchedEffect
 import androidx.compose.runtime.derivedStateOf
 import androidx.compose.runtime.getValue
+import androidx.compose.runtime.livedata.observeAsState
 import androidx.compose.runtime.mutableStateOf
 import androidx.compose.runtime.remember
 import androidx.compose.runtime.setValue
@@ -76,6 +79,7 @@ fun DetailsScreen(
 	val overlapHeightPx = with(LocalDensity.current) {
 		(200.dp).toPx() - (64.dp).toPx()
 	}
+	val timerList by detailsViewModel.timerListLiveData.observeAsState()
 
 	val isCollapsed: Boolean by remember {
 		derivedStateOf {
@@ -113,7 +117,7 @@ fun DetailsScreen(
 							.fillMaxSize()
 							.padding(16.dp),
 						horizontalAlignment = Alignment.CenterHorizontally,
-						verticalArrangement = Arrangement.Center
+						verticalArrangement = Arrangement.spacedBy(8.dp)
 					) {
 						Card {
 							Column(modifier = Modifier.fillMaxWidth()) {
@@ -187,30 +191,47 @@ fun DetailsScreen(
 													modifier = Modifier.fillMaxWidth(),
 													horizontalAlignment = Alignment.End
 												) {
-													val timer = detailsViewModel.timer
-													val remaining = detailsViewModel.remaining
 													val h = if (step.durationUnit == "h") step.duration else 0
 													val m = if (step.durationUnit == "min") step.duration else 0
 													val s = if (step.durationUnit == "s") step.duration else 0
 													ElevatedButton(
+														enabled = if (timerList == null) true else timerList?.indexOfFirst { (it.id == dishId && it.index == index) } == -1,
 														onClick = {
-															detailsViewModel.createTimer(
+															detailsViewModel.addTimer(
 																dishId,
 																index,
-																h,
-																m,
-																s
+																h * 60 * 60 + m * 60 + s
 															)
 														},
 														modifier = Modifier.padding(bottom = 4.dp)
 													) {
 														Icon(Icons.Filled.Timer, "Timer")
 														Text(text = "${step.duration}${step.durationUnit}")
-														if (remaining != null && timer != null && timer.id == dishId && timer.index == index)
-															Text(text = ", ${remaining.inWholeSeconds}s")
 													}
 												}
 										}
+									}
+								}
+							}
+						}
+						Card {
+							Column {
+								timerList?.filter { item -> item.id == dishId }?.forEach { item ->
+									Row(
+										modifier = Modifier
+											.fillMaxWidth()
+											.padding(vertical = 16.dp, horizontal = 8.dp),
+										horizontalArrangement = Arrangement.SpaceBetween
+									) {
+										Icon(Icons.Filled.Timer, "Timer")
+										Text(String.format("%02d:%02d", item.value / 60, item.value % 60))
+										Icon(Icons.Filled.Close, "Cancel", modifier = Modifier
+											.clickable {
+												detailsViewModel.clearTimer(
+													item.id,
+													item.index
+												)
+											})
 									}
 								}
 							}
