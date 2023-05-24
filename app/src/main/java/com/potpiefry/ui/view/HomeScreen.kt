@@ -50,7 +50,6 @@ import com.potpiefry.ui.viewmodel.HomeViewModel
 import com.potpiefry.ui.viewmodel.TabType
 import com.potpiefry.ui.viewmodel.homeViewTabs
 import com.potpiefry.util.DeviceType
-import com.potpiefry.util.getBodyTextSize
 import com.potpiefry.util.getHeadlineTextSize
 import com.potpiefry.util.getIconSize
 import com.potpiefry.util.getTitleTextSize

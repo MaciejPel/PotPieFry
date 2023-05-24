@@ -11,7 +11,6 @@ import androidx.compose.foundation.layout.Box
 import androidx.compose.foundation.layout.Column
 import androidx.compose.foundation.layout.ExperimentalLayoutApi
 import androidx.compose.foundation.layout.FlowRow
-import androidx.compose.foundation.layout.PaddingValues
 import androidx.compose.foundation.layout.Row
 import androidx.compose.foundation.layout.fillMaxSize
 import androidx.compose.foundation.layout.fillMaxWidth
@@ -19,9 +18,6 @@ import androidx.compose.foundation.layout.height
 import androidx.compose.foundation.layout.padding
 import androidx.compose.foundation.layout.size
 import androidx.compose.foundation.lazy.LazyColumn
-import androidx.compose.foundation.lazy.grid.GridCells
-import androidx.compose.foundation.lazy.grid.LazyVerticalGrid
-import androidx.compose.foundation.lazy.grid.items
 import androidx.compose.foundation.lazy.rememberLazyListState
 import androidx.compose.foundation.shape.CircleShape
 import androidx.compose.material.icons.Icons
@@ -52,7 +48,6 @@ import androidx.compose.runtime.remember
 import androidx.compose.runtime.setValue
 import androidx.compose.ui.Alignment
 import androidx.compose.ui.Modifier
-import androidx.compose.ui.draw.scale
 import androidx.compose.ui.graphics.Brush
 import androidx.compose.ui.graphics.Color
 import androidx.compose.ui.layout.ContentScale
@@ -61,7 +56,6 @@ import androidx.compose.ui.platform.LocalContext
 import androidx.compose.ui.platform.LocalDensity
 import androidx.compose.ui.res.painterResource
 import androidx.compose.ui.text.style.TextAlign
-import androidx.compose.ui.text.toUpperCase
 import androidx.compose.ui.unit.IntSize
 import androidx.compose.ui.unit.dp
 import androidx.compose.ui.zIndex
@@ -72,10 +66,10 @@ import com.potpiefry.data.Dish
 import com.potpiefry.ui.viewmodel.DetailsViewModel
 import com.potpiefry.ui.viewmodel.NavigationViewModel
 import com.potpiefry.util.DeviceType
-import com.potpiefry.util.getDisplayTextSize
-import com.potpiefry.util.getIconSize
 import com.potpiefry.util.StyledText
+import com.potpiefry.util.getDisplayTextSize
 import com.potpiefry.util.getHeadlineTextSize
+import com.potpiefry.util.getIconSize
 import com.potpiefry.util.getTitleTextSize
 import kotlinx.coroutines.CoroutineScope
 import kotlinx.coroutines.launch
@@ -394,11 +388,9 @@ private fun ExpandedTopBar(title: String, img: String?, deviceType: DeviceType) 
 				contentDescription = null,
 				contentScale = ContentScale.Crop,
 			)
-			Box(
-				modifier = Modifier
-					.matchParentSize()
-					.background(gradient)
-			)
+			Box(modifier = Modifier
+				.matchParentSize()
+				.background(gradient))
 		}
 		Text(
 			modifier = Modifier.padding(16.dp),

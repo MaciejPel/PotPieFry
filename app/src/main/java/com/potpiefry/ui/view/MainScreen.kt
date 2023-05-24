@@ -186,12 +186,8 @@ fun MainScreen(settingsViewModel: SettingsViewModel = viewModel()) {
 		) { innerPadding ->
 			if (openDialog.value) {
 				AlertDialog(
-					onDismissRequest = {
-						openDialog.value = false
-					},
-					title = {
-						Text(text = "New timer", fontSize = getHeadlineTextSize(deviceType))
-					},
+					onDismissRequest = { openDialog.value = false },
+					title = { Text(text = "New timer", fontSize = getHeadlineTextSize(deviceType)) },
 					text = {
 						TextField(
 							value = timerValue,
