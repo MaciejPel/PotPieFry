@@ -9,6 +9,9 @@ import androidx.compose.foundation.clickable
 import androidx.compose.foundation.layout.Arrangement
 import androidx.compose.foundation.layout.Box
 import androidx.compose.foundation.layout.Column
+import androidx.compose.foundation.layout.ExperimentalLayoutApi
+import androidx.compose.foundation.layout.FlowRow
+import androidx.compose.foundation.layout.PaddingValues
 import androidx.compose.foundation.layout.Row
 import androidx.compose.foundation.layout.fillMaxSize
 import androidx.compose.foundation.layout.fillMaxWidth
@@ -16,6 +19,9 @@ import androidx.compose.foundation.layout.height
 import androidx.compose.foundation.layout.padding
 import androidx.compose.foundation.layout.size
 import androidx.compose.foundation.lazy.LazyColumn
+import androidx.compose.foundation.lazy.grid.GridCells
+import androidx.compose.foundation.lazy.grid.LazyVerticalGrid
+import androidx.compose.foundation.lazy.grid.items
 import androidx.compose.foundation.lazy.rememberLazyListState
 import androidx.compose.foundation.shape.CircleShape
 import androidx.compose.material.icons.Icons
@@ -46,6 +52,7 @@ import androidx.compose.runtime.remember
 import androidx.compose.runtime.setValue
 import androidx.compose.ui.Alignment
 import androidx.compose.ui.Modifier
+import androidx.compose.ui.draw.scale
 import androidx.compose.ui.graphics.Brush
 import androidx.compose.ui.graphics.Color
 import androidx.compose.ui.layout.ContentScale
@@ -54,6 +61,7 @@ import androidx.compose.ui.platform.LocalContext
 import androidx.compose.ui.platform.LocalDensity
 import androidx.compose.ui.res.painterResource
 import androidx.compose.ui.text.style.TextAlign
+import androidx.compose.ui.text.toUpperCase
 import androidx.compose.ui.unit.IntSize
 import androidx.compose.ui.unit.dp
 import androidx.compose.ui.zIndex
@@ -63,10 +71,16 @@ import com.potpiefry.R
 import com.potpiefry.data.Dish
 import com.potpiefry.ui.viewmodel.DetailsViewModel
 import com.potpiefry.ui.viewmodel.NavigationViewModel
+import com.potpiefry.util.DeviceType
+import com.potpiefry.util.getDisplayTextSize
+import com.potpiefry.util.getIconSize
+import com.potpiefry.util.StyledText
+import com.potpiefry.util.getHeadlineTextSize
+import com.potpiefry.util.getTitleTextSize
 import kotlinx.coroutines.CoroutineScope
 import kotlinx.coroutines.launch
 
-@OptIn(ExperimentalMaterial3Api::class)
+@OptIn(ExperimentalMaterial3Api::class, ExperimentalLayoutApi::class)
 @Composable
 fun DetailsScreen(
 	navigationViewModel: NavigationViewModel,
@@ -74,10 +88,11 @@ fun DetailsScreen(
 	dishId: Int,
 	drawerState: DrawerState,
 	drawerScope: CoroutineScope,
+	deviceType: DeviceType,
 ) {
 	val listState = rememberLazyListState()
 	val overlapHeightPx = with(LocalDensity.current) {
-		(200.dp).toPx() - (64.dp).toPx()
+		(200.dp).toPx() - (if (deviceType == DeviceType.Tablet) 80.dp else 72.dp).toPx()
 	}
 	val timerList by detailsViewModel.timerListLiveData.observeAsState()
 
@@ -107,10 +122,11 @@ fun DetailsScreen(
 				isCollapsed = isCollapsed,
 				title = dish.name,
 				drawerState = drawerState,
-				drawerScope = drawerScope
+				drawerScope = drawerScope,
+				deviceType = deviceType
 			)
 			LazyColumn(state = listState, modifier = Modifier.fillMaxSize()) {
-				item { ExpandedTopBar(dish.name, dish.img) }
+				item { ExpandedTopBar(dish.name, dish.img, deviceType) }
 				item {
 					Column(
 						modifier = Modifier
@@ -122,28 +138,30 @@ fun DetailsScreen(
 						Card {
 							Column(modifier = Modifier.fillMaxWidth()) {
 								Column(modifier = Modifier.padding(8.dp)) {
-									Text(
-										text = "Description",
-										fontSize = MaterialTheme.typography.labelLarge.fontSize,
-										fontWeight = MaterialTheme.typography.labelLarge.fontWeight,
-										fontStyle = MaterialTheme.typography.labelLarge.fontStyle,
-										lineHeight = MaterialTheme.typography.labelLarge.lineHeight
+									StyledText(
+										text = "Description".uppercase(), style =
+										when (deviceType) {
+											DeviceType.Phone -> MaterialTheme.typography.labelLarge
+											DeviceType.Tablet -> MaterialTheme.typography.titleLarge
+										},
+										true
 									)
-									Text(
-										text = dish.description,
-										fontSize = MaterialTheme.typography.bodyMedium.fontSize,
-										fontWeight = MaterialTheme.typography.bodyMedium.fontWeight,
-										fontStyle = MaterialTheme.typography.bodyMedium.fontStyle,
-										lineHeight = MaterialTheme.typography.bodyMedium.lineHeight
+									StyledText(
+										text = dish.description, style =
+										when (deviceType) {
+											DeviceType.Phone -> MaterialTheme.typography.bodyMedium
+											DeviceType.Tablet -> MaterialTheme.typography.headlineSmall
+										}
 									)
 								}
 								Column(modifier = Modifier.padding(8.dp)) {
-									Text(
-										text = "Ingredients",
-										fontSize = MaterialTheme.typography.labelLarge.fontSize,
-										fontWeight = MaterialTheme.typography.labelLarge.fontWeight,
-										fontStyle = MaterialTheme.typography.labelLarge.fontStyle,
-										lineHeight = MaterialTheme.typography.labelLarge.lineHeight
+									StyledText(
+										text = "Ingredients".uppercase(), style =
+										when (deviceType) {
+											DeviceType.Phone -> MaterialTheme.typography.labelLarge
+											DeviceType.Tablet -> MaterialTheme.typography.titleLarge
+										},
+										true
 									)
 									Column {
 										dish.ingredients.forEach { ing ->
@@ -157,34 +175,36 @@ fun DetailsScreen(
 															shape = CircleShape
 														),
 												)
-												Text(
+												StyledText(
 													text = "${ing.amount}${if (ing.unit.isNotEmpty()) " ${ing.unit}" else ""} of ${ing.ingredient}",
-													fontSize = MaterialTheme.typography.bodyMedium.fontSize,
-													fontWeight = MaterialTheme.typography.bodyMedium.fontWeight,
-													fontStyle = MaterialTheme.typography.bodyMedium.fontStyle,
-													lineHeight = MaterialTheme.typography.bodyMedium.lineHeight,
+													style =
+													when (deviceType) {
+														DeviceType.Phone -> MaterialTheme.typography.bodyMedium
+														DeviceType.Tablet -> MaterialTheme.typography.headlineSmall
+													}
 												)
 											}
 										}
 									}
 								}
 								Column(modifier = Modifier.padding(8.dp)) {
-									Text(
-										text = "Steps",
-										fontSize = MaterialTheme.typography.labelLarge.fontSize,
-										fontWeight = MaterialTheme.typography.labelLarge.fontWeight,
-										fontStyle = MaterialTheme.typography.labelLarge.fontStyle,
-										lineHeight = MaterialTheme.typography.labelLarge.lineHeight
-
+									StyledText(
+										text = "Steps".uppercase(), style =
+										when (deviceType) {
+											DeviceType.Phone -> MaterialTheme.typography.labelLarge
+											DeviceType.Tablet -> MaterialTheme.typography.titleLarge
+										},
+										true
 									)
 									Column {
 										dish.steps.forEachIndexed { index, step ->
-											Text(
+											StyledText(
 												text = "${index + 1}. ${step.description}",
-												fontSize = MaterialTheme.typography.bodyMedium.fontSize,
-												fontWeight = MaterialTheme.typography.bodyMedium.fontWeight,
-												fontStyle = MaterialTheme.typography.bodyMedium.fontStyle,
-												lineHeight = MaterialTheme.typography.bodyMedium.lineHeight,
+												style =
+												when (deviceType) {
+													DeviceType.Phone -> MaterialTheme.typography.bodyMedium
+													DeviceType.Tablet -> MaterialTheme.typography.headlineSmall
+												}
 											)
 											if (step.duration != null && step.durationUnit != null)
 												Column(
@@ -205,8 +225,17 @@ fun DetailsScreen(
 														},
 														modifier = Modifier.padding(bottom = 4.dp)
 													) {
-														Icon(Icons.Filled.Timer, "Timer")
-														Text(text = "${step.duration}${step.durationUnit}")
+														Icon(
+															Icons.Filled.Timer,
+															"Timer",
+															Modifier
+																.size(getIconSize(deviceType))
+																.padding(end = 4.dp)
+														)
+														Text(
+															text = "${step.duration}${step.durationUnit}",
+															fontSize = getTitleTextSize(deviceType)
+														)
 													}
 												}
 										}
@@ -214,28 +243,58 @@ fun DetailsScreen(
 								}
 							}
 						}
-						Card {
-							Column {
-								timerList?.filter { item -> item.id == dishId }?.forEach { item ->
-									Row(
-										modifier = Modifier
-											.fillMaxWidth()
-											.padding(vertical = 16.dp, horizontal = 8.dp),
-										horizontalArrangement = Arrangement.SpaceBetween
-									) {
-										Icon(Icons.Filled.Timer, "Timer")
-										Text(String.format("%02d:%02d", item.value / 60, item.value % 60))
-										Icon(Icons.Filled.Close, "Cancel", modifier = Modifier
-											.clickable {
-												detailsViewModel.clearTimer(
-													item.id,
-													item.index
-												)
-											})
+						if (deviceType == DeviceType.Phone)
+							Card {
+								Column {
+									timerList?.filter { item -> item.id == dishId }?.forEach { item ->
+										Row(
+											modifier = Modifier
+												.fillMaxWidth()
+												.padding(vertical = 16.dp, horizontal = 8.dp),
+											horizontalArrangement = Arrangement.SpaceBetween
+										) {
+											Icon(Icons.Filled.Timer, "Timer")
+											Text(String.format("%02d:%02d", item.value / 60, item.value % 60))
+											Icon(Icons.Filled.Close, "Cancel", modifier = Modifier
+												.clickable {
+													detailsViewModel.clearTimer(
+														item.id, item.index
+													)
+												})
+										}
 									}
 								}
 							}
-						}
+						if (deviceType == DeviceType.Tablet)
+							FlowRow(
+								modifier = Modifier,
+								verticalAlignment = Alignment.CenterVertically,
+								horizontalArrangement = Arrangement.Center,
+								content = {
+									timerList?.filter { item -> item.id == dishId }?.forEach { item ->
+										Card(modifier = Modifier.padding(8.dp)) {
+											Column(
+												modifier = Modifier.padding(16.dp),
+												horizontalAlignment = Alignment.CenterHorizontally,
+												verticalArrangement = Arrangement.Center
+											) {
+												Icon(Icons.Filled.Timer, "Timer", Modifier.size(getIconSize(deviceType)))
+												Text(
+													String.format("%02d:%02d", item.value / 60, item.value % 60),
+													fontSize = getTitleTextSize(deviceType)
+												)
+												Icon(Icons.Filled.Close, "Cancel", modifier = Modifier
+													.size(getIconSize(deviceType))
+													.clickable {
+														detailsViewModel.clearTimer(
+															item.id, item.index
+														)
+													})
+											}
+										}
+									}
+								}
+							)
 					}
 				}
 			}
@@ -269,7 +328,7 @@ fun DetailsScreen(
 }
 
 @Composable
-fun ShareButton(dish: Dish) {
+fun ShareButton(dish: Dish, deviceType: DeviceType) {
 	val sendIntent: Intent = Intent().apply {
 		action = Intent.ACTION_SEND
 		putExtra(
@@ -291,12 +350,14 @@ fun ShareButton(dish: Dish) {
 		containerColor = BottomAppBarDefaults.bottomAppBarFabColor,
 		elevation = FloatingActionButtonDefaults.bottomAppBarFabElevation()
 	) {
-		Icon(Icons.Filled.Save, "Save")
+		Icon(
+			Icons.Filled.Save, "Save", modifier = Modifier.size(getIconSize(deviceType))
+		)
 	}
 }
 
 @Composable
-private fun ExpandedTopBar(title: String, img: String?) {
+private fun ExpandedTopBar(title: String, img: String?, deviceType: DeviceType) {
 	var sizeImage by remember { mutableStateOf(IntSize.Zero) }
 	val gradient = Brush.verticalGradient(
 		colors = listOf(Color.Transparent, MaterialTheme.colorScheme.background),
@@ -342,8 +403,7 @@ private fun ExpandedTopBar(title: String, img: String?) {
 		Text(
 			modifier = Modifier.padding(16.dp),
 			text = title,
-			fontSize = MaterialTheme.typography.headlineLarge.fontSize,
-			fontWeight = MaterialTheme.typography.headlineLarge.fontWeight,
+			fontSize = getDisplayTextSize(deviceType),
 			fontStyle = MaterialTheme.typography.headlineLarge.fontStyle,
 			color = MaterialTheme.colorScheme.primary,
 		)
@@ -358,6 +418,7 @@ private fun CollapsedTopBar(
 	title: String,
 	drawerState: DrawerState,
 	drawerScope: CoroutineScope,
+	deviceType: DeviceType
 ) {
 	val color: Color by animateColorAsState(
 		if (isCollapsed) MaterialTheme.colorScheme.background else Color.Transparent
@@ -366,7 +427,7 @@ private fun CollapsedTopBar(
 		modifier = modifier
 			.background(color)
 			.fillMaxWidth()
-			.height(64.dp)
+			.height(if (deviceType == DeviceType.Tablet) 80.dp else 72.dp)
 			.padding(horizontal = 4.dp, vertical = 16.dp),
 		contentAlignment = Alignment.BottomStart
 	) {
@@ -378,13 +439,11 @@ private fun CollapsedTopBar(
 				IconButton(onClick = {
 					drawerScope.launch { drawerState.open() }
 				}) {
-					Icon(Icons.Filled.Menu, "Menu")
+					Icon(Icons.Filled.Menu, "Menu", modifier = Modifier.size(getIconSize(deviceType)))
 				}
 				Text(
 					text = title,
-					fontSize = MaterialTheme.typography.headlineSmall.fontSize,
-					fontWeight = MaterialTheme.typography.headlineSmall.fontWeight,
-					fontStyle = MaterialTheme.typography.headlineSmall.fontStyle
+					fontSize = getHeadlineTextSize(deviceType),
 				)
 			}
 		}

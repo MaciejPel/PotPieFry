@@ -21,6 +21,7 @@ import com.potpiefry.ui.viewmodel.DetailsViewModel
 import com.potpiefry.ui.viewmodel.HomeViewModel
 import com.potpiefry.ui.viewmodel.NavigationViewModel
 import com.potpiefry.ui.viewmodel.SettingsViewModel
+import com.potpiefry.util.DeviceType
 import kotlinx.coroutines.CoroutineScope
 
 @OptIn(ExperimentalAnimationApi::class, ExperimentalMaterial3Api::class)
@@ -34,6 +35,7 @@ fun NavGraph(
 	settingsViewModel: SettingsViewModel = viewModel(),
 	drawerState: DrawerState,
 	drawerScope: CoroutineScope,
+	deviceType: DeviceType
 ) {
 	AnimatedNavHost(
 		modifier = Modifier.padding(innerPadding),
@@ -62,7 +64,7 @@ fun NavGraph(
 			},
 		) {
 			navigationViewModel.setNavigation(NavigationScreen.Home.title, NavigationScreen.Home.route)
-			HomeScreen(navController, homeViewModel)
+			HomeScreen(navController, homeViewModel, deviceType)
 		}
 		composable(
 			route = NavigationScreen.Details.route,
@@ -81,7 +83,14 @@ fun NavGraph(
 			},
 		) {
 			val dishId = it.arguments?.getInt(DETAIL_ARGUMENT_KEY).toString().toInt()
-			DetailsScreen(navigationViewModel, detailsViewModel, dishId, drawerState, drawerScope)
+			DetailsScreen(
+				navigationViewModel,
+				detailsViewModel,
+				dishId,
+				drawerState,
+				drawerScope,
+				deviceType
+			)
 		}
 		composable(
 			route = NavigationScreen.Settings.route,
@@ -108,7 +117,7 @@ fun NavGraph(
 				NavigationScreen.Settings.title,
 				NavigationScreen.Settings.route
 			)
-			SettingsScreen(settingsViewModel)
+			SettingsScreen(settingsViewModel, deviceType)
 		}
 	}
 }

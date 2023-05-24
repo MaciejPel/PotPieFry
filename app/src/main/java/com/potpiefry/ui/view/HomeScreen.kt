@@ -49,6 +49,11 @@ import com.potpiefry.data.DishPreview
 import com.potpiefry.ui.viewmodel.HomeViewModel
 import com.potpiefry.ui.viewmodel.TabType
 import com.potpiefry.ui.viewmodel.homeViewTabs
+import com.potpiefry.util.DeviceType
+import com.potpiefry.util.getBodyTextSize
+import com.potpiefry.util.getHeadlineTextSize
+import com.potpiefry.util.getIconSize
+import com.potpiefry.util.getTitleTextSize
 import kotlinx.coroutines.launch
 
 @OptIn(ExperimentalFoundationApi::class)
@@ -56,6 +61,7 @@ import kotlinx.coroutines.launch
 fun HomeScreen(
 	navController: NavController,
 	homeViewModel: HomeViewModel = viewModel(),
+	deviceType: DeviceType
 ) {
 	val pagerState = rememberPagerState()
 	val tabScope = rememberCoroutineScope()
@@ -76,7 +82,12 @@ fun HomeScreen(
 				homeViewTabs.forEachIndexed { index, item ->
 					Tab(
 						selected = index == pagerState.currentPage,
-						text = { Text(text = item.title) },
+						text = {
+							Text(
+								text = item.title,
+								fontSize = getTitleTextSize(deviceType)
+							)
+						},
 						onClick = {
 							tabScope.launch { pagerState.animateScrollToPage(index) }
 						},
@@ -86,19 +97,23 @@ fun HomeScreen(
 			HorizontalPager(pageCount = homeViewTabs.size, state = pagerState) { pageIndex ->
 				when (homeViewTabs[pageIndex]) {
 					TabType.Start -> {
-						DishGrid(navController, dishes)
+						DishGrid(navController, dishes, deviceType)
 					}
 
 					TabType.Local -> {
-						DishGrid(navController, dishes.filter {
-							it.type == TabType.Local.value
-						})
+						DishGrid(
+							navController,
+							dishes.filter { it.type == TabType.Local.value },
+							deviceType
+						)
 					}
 
 					TabType.Abroad -> {
-						DishGrid(navController, dishes.filter {
-							it.type == TabType.Abroad.value
-						})
+						DishGrid(
+							navController,
+							dishes.filter { it.type == TabType.Abroad.value },
+							deviceType
+						)
 					}
 				}
 			}
@@ -114,17 +129,15 @@ fun HomeScreen(
 				Text(
 					"Error: " + homeViewModel.errorMessage,
 					color = MaterialTheme.colorScheme.primary,
-					fontSize = MaterialTheme.typography.bodyMedium.fontSize,
-					fontWeight = MaterialTheme.typography.bodyMedium.fontWeight,
-					fontStyle = MaterialTheme.typography.bodyMedium.fontStyle,
+					fontSize = getTitleTextSize(deviceType),
 					textAlign = TextAlign.Center,
 					modifier = Modifier.padding(vertical = 12.dp)
 				)
 				ElevatedButton(onClick = {
 					homeViewModel.getDishList()
 				}) {
-					Icon(Icons.Filled.Refresh, "Refresh")
-					Text("Try again")
+					Icon(Icons.Filled.Refresh, "Refresh", modifier = Modifier.size(getIconSize(deviceType)))
+					Text("Try again", fontSize = getTitleTextSize(deviceType))
 				}
 			}
 		}
@@ -135,11 +148,17 @@ fun HomeScreen(
 @Composable
 fun DishGrid(
 	navController: NavController,
-	dishes: List<DishPreview>
+	dishes: List<DishPreview>,
+	deviceType: DeviceType
 ) {
 	LazyVerticalGrid(
 		modifier = Modifier.fillMaxSize(),
-		columns = GridCells.Fixed(1),
+		columns = GridCells.Fixed(
+			when (deviceType) {
+				DeviceType.Tablet -> 2
+				else -> 1
+			}
+		),
 		verticalArrangement = Arrangement.spacedBy(12.dp),
 		horizontalArrangement = Arrangement.spacedBy(12.dp),
 		contentPadding = PaddingValues(12.dp)
@@ -160,7 +179,14 @@ fun DishGrid(
 				Row(
 					modifier = Modifier.fillMaxSize(), verticalAlignment = Alignment.CenterVertically
 				) {
-					Box(modifier = Modifier.size(80.dp)) {
+					Box(
+						modifier = Modifier.size(
+							when (deviceType) {
+								DeviceType.Tablet -> 120.dp
+								else -> 80.dp
+							}
+						)
+					) {
 						AsyncImage(
 							modifier = Modifier.aspectRatio(1f),
 							model = ImageRequest.Builder(LocalContext.current)
@@ -179,16 +205,19 @@ fun DishGrid(
 					) {
 						Text(
 							text = dish.name,
-							fontSize = MaterialTheme.typography.headlineSmall.fontSize,
+							fontSize = getHeadlineTextSize(deviceType),
 							overflow = TextOverflow.Ellipsis,
 							maxLines = 1,
 						)
 						Text(
 							text = dish.description,
-							fontSize = MaterialTheme.typography.bodyMedium.fontSize,
+							fontSize = getTitleTextSize(deviceType),
 							lineHeight = 20.sp,
 							overflow = TextOverflow.Ellipsis,
-							maxLines = 2
+							maxLines = when (deviceType) {
+								DeviceType.Tablet -> 3
+								else -> 2
+							}
 						)
 					}
 				}

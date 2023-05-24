@@ -17,15 +17,22 @@ import androidx.compose.runtime.getValue
 import androidx.compose.ui.Alignment
 import androidx.compose.ui.Modifier
 import androidx.compose.ui.semantics.Role
+import androidx.compose.ui.text.font.FontWeight
 import androidx.compose.ui.unit.dp
 import androidx.lifecycle.viewmodel.compose.viewModel
 import com.potpiefry.ui.viewmodel.NavigationViewModel
 import com.potpiefry.ui.viewmodel.SettingsViewModel
 import com.potpiefry.ui.viewmodel.ThemeType
+import com.potpiefry.util.DeviceType
+import com.potpiefry.util.WindowSize
+import com.potpiefry.util.WindowType
+import com.potpiefry.util.getLabelTextSize
+import com.potpiefry.util.getTitleTextSize
 
 @Composable
 fun SettingsScreen(
-	settingsViewModel: SettingsViewModel = viewModel()
+	settingsViewModel: SettingsViewModel = viewModel(),
+	deviceType: DeviceType
 ) {
 	val settingsUiState by settingsViewModel.uiState.collectAsState()
 	val themeOptions =
@@ -45,10 +52,9 @@ fun SettingsScreen(
 				.padding(horizontal = 16.dp)
 		) {
 			Text(
-				text = "THEME",
-				fontSize = MaterialTheme.typography.bodySmall.fontSize,
-				fontWeight = MaterialTheme.typography.labelLarge.fontWeight,
-				color = MaterialTheme.colorScheme.secondary
+				text = "theme".uppercase(),
+				fontSize = getLabelTextSize(deviceType),
+				fontWeight = FontWeight.Bold
 			)
 		}
 		themeOptions.forEach { option ->
@@ -63,7 +69,10 @@ fun SettingsScreen(
 					.padding(16.dp),
 				horizontalArrangement = Arrangement.SpaceBetween
 			) {
-				Text(text = option.name)
+				Text(
+					text = option.name,
+					fontSize = getTitleTextSize(deviceType),
+				)
 				RadioButton(
 					selected = settingsUiState.theme == option,
 					onClick = null

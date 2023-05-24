@@ -5,6 +5,7 @@ import androidx.compose.animation.ExperimentalAnimationApi
 import androidx.compose.foundation.layout.fillMaxWidth
 import androidx.compose.foundation.layout.imePadding
 import androidx.compose.foundation.layout.padding
+import androidx.compose.foundation.layout.size
 import androidx.compose.foundation.text.KeyboardActions
 import androidx.compose.foundation.text.KeyboardOptions
 import androidx.compose.material.icons.Icons
@@ -50,9 +51,15 @@ import com.potpiefry.ui.viewmodel.DetailsViewModel
 import com.potpiefry.ui.viewmodel.HomeViewModel
 import com.potpiefry.ui.viewmodel.NavigationViewModel
 import com.potpiefry.ui.viewmodel.SettingsViewModel
+import com.potpiefry.util.getDisplayTextSize
+import com.potpiefry.util.getHeadlineTextSize
+import com.potpiefry.util.getIconSize
+import com.potpiefry.util.getTitleTextSize
+import com.potpiefry.util.getTitleTextStyle
+import com.potpiefry.util.rememberDeviceType
 import kotlinx.coroutines.launch
 
-@SuppressLint("RememberReturnType")
+@SuppressLint("RememberReturnType", "CoroutineCreationDuringComposition")
 @OptIn(ExperimentalMaterial3Api::class, ExperimentalAnimationApi::class)
 @Composable
 fun MainScreen(settingsViewModel: SettingsViewModel = viewModel()) {
@@ -66,25 +73,36 @@ fun MainScreen(settingsViewModel: SettingsViewModel = viewModel()) {
 	val drawerState = rememberDrawerState(DrawerValue.Closed)
 	val drawerScope = rememberCoroutineScope()
 
+	val deviceType = rememberDeviceType()
+
 	val scrollBehavior = TopAppBarDefaults.pinnedScrollBehavior()
+
 	val focusRequester = remember { FocusRequester() }
 	val focusManager = LocalFocusManager.current
+
 	val openDialog = remember { mutableStateOf(false) }
 	var timerValue by remember { mutableStateOf("") }
 
-	NavDrawer(navController, navigationViewModel, drawerState, drawerScope) {
+	NavDrawer(navController, navigationViewModel, drawerState, drawerScope, deviceType) {
 		Scaffold(
 			modifier = Modifier.nestedScroll(scrollBehavior.nestedScrollConnection),
 			topBar = {
 				if (!navigationUiState.route.contains("detail")) {
 					TopAppBar(
 						scrollBehavior = scrollBehavior,
-						title = { Text(text = navigationUiState.title) },
+						title = {
+							Text(
+								text = navigationUiState.title,
+								fontSize = getHeadlineTextSize(deviceType)
+							)
+						},
 						navigationIcon = {
 							IconButton(onClick = {
 								drawerScope.launch { drawerState.open() }
 							}) {
-								Icon(Icons.Filled.Menu, "Menu")
+								Icon(
+									Icons.Filled.Menu, "Menu", modifier = Modifier.size(getIconSize(deviceType))
+								)
 							}
 						}
 					)
@@ -110,13 +128,25 @@ fun MainScreen(settingsViewModel: SettingsViewModel = viewModel()) {
 										onValueChange = { homeViewModel.setQuery(it) },
 										singleLine = true,
 										maxLines = 1,
+										textStyle = getTitleTextStyle(deviceType),
+										placeholder = {
+											Text(text = "Search", fontSize = getTitleTextSize(deviceType))
+										},
 										leadingIcon = {
-											Icon(Icons.Filled.Search, "Search")
+											Icon(
+												Icons.Filled.Search,
+												"Search",
+												modifier = Modifier.size(getIconSize(deviceType))
+											)
 										},
 										trailingIcon = {
 											if (homeViewModel.query.isNotEmpty())
 												IconButton(onClick = { homeViewModel.setQuery("") }) {
-													Icon(Icons.Filled.Close, "Empty")
+													Icon(
+														Icons.Filled.Close,
+														"Empty",
+														modifier = Modifier.size(getIconSize(deviceType))
+													)
 												}
 										}
 									)
@@ -126,13 +156,21 @@ fun MainScreen(settingsViewModel: SettingsViewModel = viewModel()) {
 								IconButton(onClick = {
 									navController.popBackStack()
 								}) {
-									Icon(Icons.Filled.ArrowBack, "Back")
+									Icon(
+										Icons.Filled.ArrowBack,
+										"Back",
+										modifier = Modifier.size(getIconSize(deviceType))
+									)
 								}
 								if (navigationUiState.route.contains("detail") && detailsViewModel.dish != null) {
 									IconButton(onClick = {
 										openDialog.value = true
 									}) {
-										Icon(Icons.Filled.Add, "Add Timer")
+										Icon(
+											Icons.Filled.Add,
+											"Add Timer",
+											modifier = Modifier.size(getIconSize(deviceType))
+										)
 									}
 								}
 							}
@@ -140,7 +178,7 @@ fun MainScreen(settingsViewModel: SettingsViewModel = viewModel()) {
 					},
 					floatingActionButton = {
 						if (navigationUiState.route.contains("detail") && detailsViewModel.dish != null) {
-							ShareButton(detailsViewModel.dish!!)
+							ShareButton(detailsViewModel.dish!!, deviceType)
 						}
 					}
 				)
@@ -152,7 +190,7 @@ fun MainScreen(settingsViewModel: SettingsViewModel = viewModel()) {
 						openDialog.value = false
 					},
 					title = {
-						Text(text = "New timer")
+						Text(text = "New timer", fontSize = getHeadlineTextSize(deviceType))
 					},
 					text = {
 						TextField(
@@ -165,7 +203,8 @@ fun MainScreen(settingsViewModel: SettingsViewModel = viewModel()) {
 							),
 							maxLines = 1,
 							singleLine = true,
-							placeholder = { Text("Time in minutes") }
+							textStyle = getTitleTextStyle(deviceType),
+							placeholder = { Text("Time in minutes", fontSize = getTitleTextSize(deviceType)) }
 						)
 					},
 					confirmButton = {
@@ -179,7 +218,7 @@ fun MainScreen(settingsViewModel: SettingsViewModel = viewModel()) {
 								timerValue = ""
 								openDialog.value = false
 							}) {
-							Text("Add")
+							Text("Add", fontSize = getTitleTextSize(deviceType))
 						}
 					},
 					dismissButton = {
@@ -188,7 +227,7 @@ fun MainScreen(settingsViewModel: SettingsViewModel = viewModel()) {
 								timerValue = ""
 								openDialog.value = false
 							}) {
-							Text("Cancel")
+							Text("Cancel", fontSize = getTitleTextSize(deviceType))
 						}
 					}
 				)
@@ -201,7 +240,8 @@ fun MainScreen(settingsViewModel: SettingsViewModel = viewModel()) {
 				detailsViewModel = detailsViewModel,
 				settingsViewModel = settingsViewModel,
 				drawerState = drawerState,
-				drawerScope = drawerScope
+				drawerScope = drawerScope,
+				deviceType = deviceType
 			)
 		}
 	}

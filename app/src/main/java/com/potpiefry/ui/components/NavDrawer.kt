@@ -4,6 +4,7 @@ import androidx.compose.foundation.layout.Arrangement
 import androidx.compose.foundation.layout.Column
 import androidx.compose.foundation.layout.fillMaxSize
 import androidx.compose.foundation.layout.padding
+import androidx.compose.foundation.layout.size
 import androidx.compose.foundation.layout.width
 import androidx.compose.material3.Divider
 import androidx.compose.material3.DrawerState
@@ -27,6 +28,12 @@ import com.potpiefry.R
 import com.potpiefry.ui.theme.shapeScheme
 import com.potpiefry.ui.view.NavigationScreen
 import com.potpiefry.ui.viewmodel.NavigationViewModel
+import com.potpiefry.util.DeviceType
+import com.potpiefry.util.WindowSize
+import com.potpiefry.util.WindowType
+import com.potpiefry.util.getHeadlineTextSize
+import com.potpiefry.util.getIconSize
+import com.potpiefry.util.getTitleTextSize
 import kotlinx.coroutines.CoroutineScope
 import kotlinx.coroutines.launch
 
@@ -37,6 +44,7 @@ fun NavDrawer(
 	navigationViewModel: NavigationViewModel,
 	drawerState: DrawerState,
 	scope: CoroutineScope,
+	deviceType: DeviceType,
 	content: @Composable () -> Unit
 ) {
 	val navigationUiState by navigationViewModel.uiState.collectAsState()
@@ -55,8 +63,7 @@ fun NavDrawer(
 			) {
 				Text(
 					text = stringResource(id = R.string.app_name),
-					fontSize = MaterialTheme.typography.headlineSmall.fontSize,
-					fontWeight = FontWeight.SemiBold,
+					fontSize = getHeadlineTextSize(deviceType),
 					modifier = Modifier.padding(start = 16.dp, top = 12.dp, bottom = 12.dp)
 				)
 				Divider()
@@ -68,8 +75,16 @@ fun NavDrawer(
 				) {
 					screens.forEach { screen ->
 						NavigationDrawerItem(
-							icon = { Icon(screen.icon, contentDescription = null) },
-							label = { Text(screen.title) },
+							icon = {
+								Icon(
+									screen.icon,
+									contentDescription = null,
+									modifier = Modifier.size(getIconSize(deviceType))
+								)
+							},
+							label = {
+								Text(screen.title, fontSize = getTitleTextSize(deviceType))
+							},
 							selected = screen.route == navigationUiState.route,
 							onClick = {
 								scope.launch { drawerState.close() }
