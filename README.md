@@ -7,3 +7,5 @@ Mobile app for classes. Backend available at [link](https://github.com/MaciejPel
 - Accompanist
 - Material 3 UI
 - DataStore
+
+This project is abandoned, I have no intention of developing it any further than needed.
